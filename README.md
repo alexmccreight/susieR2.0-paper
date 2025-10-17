@@ -1,29 +1,25 @@
-# ColocBoost Manuscript Resources
+# susieR 2.0 Manuscript Resources
 
-Code and data to reproduce figures in ColocBoost manuscript.
+Code and data to reproduce figures in susieR 2.0 manuscript.
 
 
-## About ColocBoost
+## About susieR 2.0
 
-ColocBoost is a statistical approach for identifying shared genetic influences across multiple traits and molecular phenotypes. ColocBoost is a multi-task learning approach to variable selection regression with highly correlated predictors and sparse effects, based on frequentist statistical inference. It provides statistical evidence to identify which subsets of predictors have non-zero effects on which subsets of response variables.
+susieR 2.0 is a complete architectural redesign that addresses code duplication and fragmented architecture of the original SuSiE implementation while adding new features including unmappable effects modeling and variuos performance optimizations, all while maintaing full backward compatibility.
+
+susieR 2.0 eliminates this duplicative architecture through a unified framework built on modular design principles. The user-facing interface remains unchanged, but the implementation now uses generic functions with data-type specific backends through R’s S3 dispatch system. This architecture enables the integration of new SuSiE extensions while maintaining identical results to their original versions. Beyond architectural improvements, this release introduces substantial algorithmic advances including support for unmappable effects modeling, enhanced computational speed for regularized LD matrices, new convergence criteria, and improved refinement procedures.
 
 ## Repository Structure
 
-This repository contains the codes and data used to generate all figures from our manuscript, available at: https://github.com/StatFunGen/colocboost-paper
+This repository contains the codes and data used to generate all figures from our manuscript, available at: https://github.com/StatFunGen/susieR2.0-paper
 
 - **Simulation Studies**: This directory contains simulation designs and implementation codes used in the paper. 
 
-- **Data Applications**: This section contains the data applications discussed in the ColocBoost paper.
+- **Data Applications**: This section contains the data applications discussed in the susieR 2.0 paper.
 
 - **Main Figures**: Each notebook is fully executable and documented to ensure reproducibility of our results.
 
 - **Supplementary Figures**: Each notebook is fully executable and documented to ensure reproducibility of our results shown in Supplementary Figures. 
-
-Due to the file size limitation of CRAN release, the full dataset used in [tutorials](https://statfungen.github.io/colocboost/articles/index.html) can be found in this repo.
-
-- Reproducible dataset in Figure 2b: `Main_Figures/Figure_2/data/*.rda`
-- Full example data with individual level and summary statistics for 5 traits: `Simulation_Studies/Data/*.rda`
-
 
 ## Getting Started
 
@@ -39,13 +35,10 @@ The analyses in this book were performed using:
 - R version 4.1 or higher
 - Key R packages: data.table, ggplot2, dplyr
 
-## ColocBoost Tutorial Website
+## susieR 2.0 Tutorial Website
 
-Learn how to perform colocalization analysis with step-by-step examples. For detailed tutorials and use cases in [Tutorials](https://statfungen.github.io/colocboost/articles/index.html).
+Learn how to perform colocalization analysis with step-by-step examples. For detailed tutorials and use cases in [Tutorials](https://statfungen.github.io/susieR/articles/index.html).
 
 ## Citation
 
-If you use ColocBoost in your research, please cite:
-
-> Cao X, Sun H, Feng R, Mazumder R, Najar CFB, Li YI, de Jager PL, Bennett D, The Alzheimer's Disease Functional Genomics Consortium, Dey KK, Wang G. (2025+). Integrative multi-omics QTL colocalization maps regulatory architecture in aging human brain. medRxiv. [https://doi.org/10.1101/2025.04.17.25326042](https://doi.org/10.1101/2025.04.17.25326042)
-
+If you use susieR 2.0 in your research, please cite:
