@@ -1,0 +1,85 @@
+# Table of contents
+# Learn more at https://jupyterbook.org/customize/toc.html
+
+format: jb-book
+root: README
+chapters:
+  - file: intro
+  - file: Simulation_Studies/index
+    sections:
+      - file: Simulation_Studies/0_Schematics_Simulation
+      - file: Simulation_Studies/1_Phenotype_Simulation
+      - file: Simulation_Studies/2_Run_ColocBoost
+      - file: Simulation_Studies/3_Other_Colocalization_Methods
+      - file: Simulation_Studies/4_Result_Summary
+      - file: Simulation_Studies/5_Secondary_Simulation
+      - file: Simulation_Studies/7_Correlated_Simulation
+      - file: Simulation_Studies/6_GWAS_Simulation
+      - file: Simulation_Studies/8_Null_Simulation
+      - file: Simulation_Studies/9_FineBoost
+      - file: Simulation_Studies/10_Run_OPERA
+      - file: Simulation_Studies/11_Run_OPERA_Original_Proportion
+      
+  - file: Data_Applications/index
+
+  - file: Main_Figures/index
+    sections:
+      - file: Main_Figures/Figure_2/index
+        sections:
+          - file: Main_Figures/Figure_2/Figure_2a
+          - file: Main_Figures/Figure_2/Figure_2b
+          - file: Main_Figures/Figure_2/Figure_2c
+          - file: Main_Figures/Figure_2/Figure_2d
+          - file: Main_Figures/Figure_2/Figure_2e
+      - file: Main_Figures/Figure_3/index
+        sections:
+          - file: Main_Figures/Figure_3/Figure_3a
+          - file: Main_Figures/Figure_3/Figure_3b
+          - file: Main_Figures/Figure_3/Figure_3c
+          - file: Main_Figures/Figure_3/Figure_3d
+          - file: Main_Figures/Figure_3/Figure_3e
+          - file: Main_Figures/Figure_3/Figure_3f
+          - file: Main_Figures/Figure_3/Figure_3g
+          - file: Main_Figures/Figure_3/Figure_3h
+          - file: Main_Figures/Figure_3/Figure_3i
+      - file: Main_Figures/Figure_4/index
+        sections:
+          - file: Main_Figures/Figure_4/Figure_4a
+          - file: Main_Figures/Figure_4/Figure_4b
+          - file: Main_Figures/Figure_4/Figure_4c
+          - file: Main_Figures/Figure_4/Figure_4d
+          - file: Main_Figures/Figure_4/Figure_4e
+      - file: Main_Figures/Figure_5/index
+        sections:
+          - file: Main_Figures/Figure_5/Figure_5abc
+          - file: Main_Figures/Figure_5/Figure_5d
+      - file: Main_Figures/Figure_6/index
+        sections:
+          - file: Main_Figures/Figure_6/Figure_6a
+          - file: Main_Figures/Figure_6/Figure_6b
+          - file: Main_Figures/Figure_6/Figure_6c
+          - file: Main_Figures/Figure_6/Figure_6d
+          - file: Main_Figures/Figure_6/Figure_6e
+          - file: Main_Figures/Figure_6/Figure_6f
+          - file: Main_Figures/Figure_6/Figure_6g
+          - file: Main_Figures/Figure_6/Figure_6h
+  
+  - file: Supplementary_Tables/index
+
+  - file: Supplementary_Figures/index
+    sections:
+      - file: Supplementary_Figures/Supplementary_Figure_S2/Figure_S2
+      - file: Supplementary_Figures/Supplementary_Figure_S3/Figure_S3
+      - file: Supplementary_Figures/Supplementary_Figure_S4/Figure_S4
+      - file: Supplementary_Figures/Supplementary_Figure_S5/Figure_S5
+      - file: Supplementary_Figures/Supplementary_Figure_S6/Figure_S6
+      - file: Supplementary_Figures/Supplementary_Figure_S7/Figure_S7
+      - file: Supplementary_Figures/Supplementary_Figure_S8/Figure_S8
+      - file: Supplementary_Figures/Supplementary_Figure_S9/Figure_S9
+      - file: Supplementary_Figures/Supplementary_Figure_S10/Figure_S10
+      - file: Supplementary_Figures/Supplementary_Figure_S11/Figure_S11
+      - file: Supplementary_Figures/Supplementary_Figure_S12/Figure_S12
+      - file: Supplementary_Figures/Supplementary_Figure_S13/Figure_S13
+      - file: Supplementary_Figures/Supplementary_Figure_S14/Figure_S14
+
+      
