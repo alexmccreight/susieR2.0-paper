@@ -1,9 +1,6 @@
 # Main Figures
 
-Each notebook is fully executable and documented to ensure reproducibility of our results. The main sections include:
+This section contains the scripts used to assemble each main figure from pre-computed results. The upstream simulation and analysis code lives under **Simulation Studies** and **Data Applications**.
 
-- **Figure 2**: Performance comparison of ColocBoost with other multi-trait colocalization methods in simulation benchmarks
-- **Figure 3**: ColocBoost xQTL analysis across cell types and traits modalities
-- **Figure 4**: Validation of ColocBoost colocalization signals using CRISPR data
-- **Figure 5**: Disease heritability analyses of variant-level functional annotations derived from ColocBoost
-- **Figure 6**: AD–xQTL ColocBoost identifies colocalized variants between xQTLs and AD GWAS
+- **Figure 1**: SuSiE 2.0 software architecture overview and simulation benchmarks comparing fine-mapping power, FDR, and runtime against SuSiE 1.0 across two complex simulation scenarios
+- **Figure 2**: ROSMAP eQTL fine-mapping application of SuSiE 2.0 across three brain tissues, covering credible set discovery, method concordance, TWAS prediction, functional enrichment, and a gene-level example
