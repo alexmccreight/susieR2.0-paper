@@ -1,17 +1,7 @@
 # Supplementary Figures
 
-Each notebook is fully executable and documented to ensure reproducibility of our results. The main sections include:
+This section contains the scripts used to assemble each supplementary figure from pre-computed results. The upstream simulation and analysis code lives under **Simulation Studies** and **Data Applications**.
 
-- **Figure S2**: Extended performance comparison of ColocBoost against other multi-trait colocalization methods. 
-- **Figure S3**: Additional metrics to benchmark performance of ColocBoost with other multi-trait colocalization methods. 
-- **Figure S4**: Hyperparameter sensitivity and robustness analysis for ColocBoost. 
-- **Figure S5**: Extended ColocBoost xQTL analysis in aging human brain.
-- **Figure S6**: Functional enrichment of colocalized variants.
-- **Figure S7**: Properties of genes with multiple causal variants.
-- **Figure S8**: xQTL-only ColocBoost for eQTLs across 13 brain tissues in GTEx.
-- **Figure S9**: Validation of ColocBoost colocalization. 
-- **Figure S10**: Extended disease heritability analyses of variant-level functional annotations derived from ColocBoost.
-- **Figure S11**: Extended evaluations of GWAS-xQTL colocalization from ColocBoost and competing methods. 
-- **Figure S12**: Additional summary of genome-wide GWAS-xQTL colocalization results.
-- **Figure S13**: Example cases of xQTL colocalizations in known AD risk genes.
-- **Figure S14**: Additional details of colocalizations in gene CTSH. 
+- **Figure S1**: Sparse fine-mapping benchmarks comparing SuSiE, SuSiE-ash, and SuSiE-inf on power, FDR, PIP ROC curves, and PIP calibration across K = 1–5 causal variants
+- **Figure S2**: Unmappable-effects worked example showing PIPs and credible sets from SuSiE (L=10), SuSiE (L=40), SuSiE-inf, and SuSiE-ash on a single simulated dataset
+- **Figure S3**: TWAS cross-validation prediction R² and per-replicate winner proportions for SuSiE, SuSiE-ash, and SuSiE-inf across sparse and complex (oligogenic-plus-infinitesimal) scenarios
