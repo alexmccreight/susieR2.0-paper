@@ -7,3 +7,4 @@ This section contains the scripts used to assemble each supplementary figure fro
 - **Figure S3**: TWAS cross-validation prediction R² and per-replicate winner proportions for SuSiE, SuSiE-ash, and SuSiE-inf across sparse and complex (oligogenic-plus-infinitesimal) scenarios
 - **Figure S4**: Sparse fine-mapping comparison of SuSiE credible-set variants: default (purity ≥ 0.5), high-purity filter (≥ 0.8), SuSiE+BLiP, and SuSiE+attainable coverage on power, FDR, purity, and CS size across K = 1–5 causal variants
 - **Figure S5**: Credible-set count by size bin and median purity for SuSiE, SuSiE-ash, and SuSiE-inf across sparse and three complex (oligogenic-plus-infinitesimal) scenarios
+- **Figure S6**: Mean runtime (seconds) for SuSiE, SuSiE-ash, and SuSiE-inf across sparse and three complex (oligogenic-plus-infinitesimal) scenarios

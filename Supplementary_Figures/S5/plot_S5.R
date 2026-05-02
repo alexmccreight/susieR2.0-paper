@@ -58,6 +58,14 @@ method_colors <- c(
   "SuSiE-inf" = "#7CB342"
 )
 
+# Display labels for panel-E x-axis (descriptive simulation names)
+scenario_labels <- c(
+  "Sparse"     = "Sparse",
+  "Complex"    = "Oligogenic Effects on a\nPolygenic Background",
+  "Complex S1" = "Oligogenic Effects on a Moderate\nInfinitesimal Background",
+  "Complex S2" = "Oligogenic Effects on an Extensive\nInfinitesimal Background"
+)
+
 theme_s5 <- theme_classic(base_size = 14) +
   theme(
     axis.title       = element_text(face = "bold", size = 18),
@@ -126,12 +134,13 @@ panel_E <- ggplot(purity_summary,
                   aes(x = scenario, y = median_purity, color = method)) +
   geom_point(size = 6, position = position_dodge(width = 0.5)) +
   scale_color_manual(values = method_colors) +
+  scale_x_discrete(labels = scenario_labels) +
   scale_y_continuous(limits = c(0.9, 1.0),
                      expand = expansion(mult = c(0, 0.02))) +
   labs(x = "Scenario", y = "Median Purity") +
   theme_s5 +
   theme(
-    axis.text.x = element_text(face = "bold", size = 14),
+    axis.text.x = element_text(face = "bold", size = 11, lineheight = 0.9),
     legend.position = "none"
   )
 
