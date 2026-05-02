@@ -10,7 +10,7 @@
 #   - fit_susie.rds          (SuSiE, L = 10)
 #   - fit_inf.rds            (SuSiE-inf, L = 10)
 #   - fit_ash.rds            (SuSiE-ash, L = 10)
-#   - fit_susie_L40.rds      (SuSiE, L = 40)
+#   - fit_susie_bb.rds       (SuSiE+BB, L = 10, slot_prior_betabinom())
 # =============================================================================
 
 pkgload::load_all("/Users/alexmccreight/StatFunGen/susieR", quiet = TRUE)
@@ -68,14 +68,14 @@ cat(sprintf("  Completed in %.1f seconds\n", (t1 - t0)[3]))
 saveRDS(fit_ash, file.path(output_dir, "fit_ash.rds"))
 
 # =============================================================================
-# Fit SuSiE (L = 40)
+# Fit SuSiE+BB (L = 10, beta-binomial slot prior)
 # =============================================================================
-cat("Fitting SuSiE (L = 40)...\n")
+cat("Fitting SuSiE+BB (L = 10)...\n")
 t0 <- proc.time()
-fit_susie_L40 <- susie(X, y, L = 40)
+fit_susie_bb <- susie(X, y, L = 10, slot_prior = slot_prior_betabinom())
 t1 <- proc.time()
 cat(sprintf("  Completed in %.1f seconds\n", (t1 - t0)[3]))
-saveRDS(fit_susie_L40, file.path(output_dir, "fit_susie_L40.rds"))
+saveRDS(fit_susie_bb, file.path(output_dir, "fit_susie_bb.rds"))
 
 # =============================================================================
 # Summary
@@ -85,10 +85,10 @@ cat("  - data_and_sumstats.rds\n")
 cat("  - fit_susie.rds\n")
 cat("  - fit_inf.rds\n")
 cat("  - fit_ash.rds\n")
-cat("  - fit_susie_L40.rds\n")
+cat("  - fit_susie_bb.rds\n")
 
 cat("\n=== Summary ===\n")
 cat(sprintf("SuSiE (L=10):  %d credible sets\n", length(fit_susie$sets$cs)))
 cat(sprintf("SuSiE-inf:     %d credible sets\n", length(fit_inf$sets$cs)))
 cat(sprintf("SuSiE-ash:     %d credible sets\n", length(fit_ash$sets$cs)))
-cat(sprintf("SuSiE (L=40):  %d credible sets\n", length(fit_susie_L40$sets$cs)))
+cat(sprintf("SuSiE+BB:      %d credible sets\n", length(fit_susie_bb$sets$cs)))

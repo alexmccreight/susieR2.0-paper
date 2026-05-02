@@ -6,9 +6,9 @@
 # Row 1: Ground truth (2 panels, 50% each)
 #   A: True effect sizes    B: Z-scores (-log10 p)
 # Row 2: PIP plots (4 panels, 25% each)
-#   C: SuSiE (L=10)   D: SuSiE (L=40)   E: SuSiE-inf   F: SuSiE-ash
+#   C: SuSiE (L=10)   D: SuSiE+BB   E: SuSiE-inf   F: SuSiE-ash
 # Row 3: CS on true effects (4 panels, 25% each)
-#   G: SuSiE (L=10)   H: SuSiE (L=40)   I: SuSiE-inf   J: SuSiE-ash
+#   G: SuSiE (L=10)   H: SuSiE+BB   I: SuSiE-inf   J: SuSiE-ash
 # =============================================================================
 
 library(ggplot2)
@@ -34,7 +34,7 @@ pvals <- data_stats$pvals
 fit_susie    <- readRDS(file.path(data_dir, "fit_susie.rds"))
 fit_inf      <- readRDS(file.path(data_dir, "fit_inf.rds"))
 fit_ash      <- readRDS(file.path(data_dir, "fit_ash.rds"))
-fit_susie_L40 <- readRDS(file.path(data_dir, "fit_susie_L40.rds"))
+fit_susie_bb <- readRDS(file.path(data_dir, "fit_susie_bb.rds"))
 
 # =============================================================================
 # susie_plot_gg: ggplot2 version of susie_plot
@@ -266,7 +266,7 @@ cat("Creating Row 2: PIP plots...\n")
 
 panel_C <- susie_plot_gg(fit_susie, y = "PIP", b = b, title = "SuSiE") +
   theme(plot.margin = margin(5, 5, 5, 5))
-panel_D <- susie_plot_gg(fit_susie_L40, y = "PIP", b = b, title = "SuSiE (L=40)") +
+panel_D <- susie_plot_gg(fit_susie_bb, y = "PIP", b = b, title = "SuSiE+BB") +
   theme(plot.margin = margin(5, 5, 5, 5))
 panel_E <- susie_plot_gg(fit_inf, y = "PIP", b = b, title = "SuSiE-inf") +
   theme(plot.margin = margin(5, 5, 5, 5))
@@ -285,7 +285,7 @@ cat("Creating Row 3: CS on true effects plots...\n")
 
 panel_G <- make_cs_effects_plot(fit_susie, b, NULL) +
   theme(plot.margin = margin(5, 5, 5, 5))
-panel_H <- make_cs_effects_plot(fit_susie_L40, b, NULL) +
+panel_H <- make_cs_effects_plot(fit_susie_bb, b, NULL) +
   theme(plot.margin = margin(5, 5, 5, 5))
 panel_I <- make_cs_effects_plot(fit_inf, b, NULL) +
   theme(plot.margin = margin(5, 5, 5, 5))
@@ -321,6 +321,6 @@ cat(sprintf("\nFigure saved to:\n  - %s\n  - %s\n", output_pdf, output_png))
 # Print summary
 cat("\n=== Summary ===\n")
 cat(sprintf("SuSiE (L=10):  %d credible sets\n", length(fit_susie$sets$cs)))
-cat(sprintf("SuSiE (L=40):  %d credible sets\n", length(fit_susie_L40$sets$cs)))
+cat(sprintf("SuSiE+BB:  %d credible sets\n", length(fit_susie_bb$sets$cs)))
 cat(sprintf("SuSiE-inf:     %d credible sets\n", length(fit_inf$sets$cs)))
 cat(sprintf("SuSiE-ash:     %d credible sets\n", length(fit_ash$sets$cs)))
