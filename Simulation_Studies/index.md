@@ -1,30 +1,23 @@
 # Simulation Studies
 
-This directory contains simulation designs and implementation codes used in the paper.
+This directory holds the code used to benchmark susieR 2.0 across two task settings. Methodology and parameter choices are described in the paper's Methods section; the scripts here are the exact pipeline used to generate the results shown in **Figure 1 (panels B–F)** and **Supplementary Figures S1, S3, S4, S5**.
 
+## Pipelines
 
-## 1. Simulation Design Overview
+Both pipelines follow a 3-step HPC pattern (generator → parallel worker → combiner).
 
-This section provides a summary of the simulation notebooks that implement a comprehensive benchmark of susieR 2.0 in both a sparse and oligogenic setting.
+### Fine-mapping (`scripts/fine_mapping/`)
 
-- **Simulation Schematics**: Comprehensive overview of the simulation framework used to evaluate and benchmark SuSiE with competing methods.
+- `command_generator_parallel.R` — emits per-job HPC commands for the parameter grid
+- `simulation_script_parallel.R` — per-rep worker: simulates phenotype + fits SuSiE, SuSiE-ash, SuSiE-inf
+- `combine_parallel_results.R` — merges per-job outputs into one rds per scenario
 
-- **Phenotype Data Simulation**: Establishes the fundamental simulation framework for generating synthetic phenotype data. Simulates phenotype data (y vector) for based on real genotype data (X matrix) using varying levels of total heritability approaches. Configurable for different numbers of sparse effects with controllable narrow-sense heritability.
+Outputs feed: Figure 1 (panels C–F), Figures S1, S4, S5.
 
-- **Run susieR2.0**: Executes the SuSiE algorithm on simulated datasets to identify causal variants. Processes and standardizes results for performance evaluation with key output metrics.
+### Prediction CV (`scripts/prediction_cv/`)
 
-- **Result Summary**: Calculates performance metrics including power and false discovery rates, AUROC/AUPRC curves, and prediction metrics from method results. Generates comparison tables summarizing method effectiveness across simulation scenarios.
+- `command_generator_parallel_cv.R` — emits per-job HPC commands
+- `prediction_cv_script_parallel.R` — per-rep worker: 5-fold cross-validated prediction R² for SuSiE, SuSiE-ash, SuSiE-inf
+- `combine_parallel_cv_results.R` — merges per-job outputs
 
-## 2. References
-
-[1] [simxQTL](https://github.com/StatFunGen/simxQTL): In house simulation R package to support investigations of various QTL association methods.
-
-[2] [susieR]()
-
-[3] [susieR for SS/RSS data]()
-
-[4] [ash methodology]()
-
-[5] [mr.ash]()
-
-[6] [susie-inf]()
+Outputs feed: Figure S3.
