@@ -8,7 +8,7 @@
 #
 # Layout:
 #   Row 1:  [ A: Software Architecture (full width) ]              ~55%
-#   Row 2:  [ B: Runtime (placeholder) ] [ C: Complex S1 Power ] [ D: Complex S1 FDR ] [ E: Complex S2 Power ] [ F: Complex S2 FDR ]  ~45%
+#   Row 2:  [ B: SuSiE-inf speedup ] [ C: Complex S1 Power ] [ D: Complex S1 FDR ] [ E: Complex S2 Power ] [ F: Complex S2 FDR ]  ~45%
 # =============================================================================
 
 library(ggplot2)
@@ -22,9 +22,9 @@ cat("Creating Figure 1: SuSiE 2.0 Overview & Simulation Benchmarks...\n\n")
 # PATHS
 # =============================================================================
 
-base_dir <- "/Users/alexmccreight/StatFunGen/susieR2.0-benchmark"
-fig1_dir <- file.path(base_dir, "final_scripts/figure_1")
-output_dir <- file.path(base_dir, "final_scripts/figure_1")
+base_dir <- "/Users/alexmccreight/StatFunGen/susieR2.0-paper"
+fig1_dir <- file.path(base_dir, "Main_Figures/figure_1")
+output_dir <- file.path(base_dir, "Main_Figures/figure_1")
 
 # =============================================================================
 # LOAD PANEL PLOT OBJECTS
@@ -45,9 +45,9 @@ panel_A <- ggdraw() +
                         interpolate = TRUE))
 cat("  Panel A loaded (from PNG).\n")
 
-# Panel B: Runtime Benchmark
+# Panel B: SuSiE-inf speedup
 panel_B <- readRDS(file.path(fig1_dir, "figure_1_panel_B", "panel_B_plot.rds"))
-cat("  Panel B loaded (Runtime Benchmark).\n")
+cat("  Panel B loaded (SuSiE-inf speedup).\n")
 
 # Panel C: Complex S1 Power
 panel_C <- readRDS(file.path(fig1_dir, "figure_1_panel_C", "panel_C_plot.rds"))
@@ -98,7 +98,7 @@ row1 <- panel_A
 cat("Row 1 complete.\n")
 
 # =============================================================================
-# ROW 2: [B: Runtime (placeholder)] [C: Complex S1 Power] [D: Complex S1 FDR] [E: Complex S2 Power] [F: Complex S2 FDR]
+# ROW 2: [B: SuSiE-inf speedup] [C: Complex S1 Power] [D: Complex S1 FDR] [E: Complex S2 Power] [F: Complex S2 FDR]
 # =============================================================================
 cat("Assembling Row 2...\n")
 

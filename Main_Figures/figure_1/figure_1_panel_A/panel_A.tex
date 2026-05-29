@@ -85,29 +85,31 @@
 \pgfmathsetmacro{\sCx}{(\sL+\sR)/2}
 
 % -- Ordinary RSS --
-\draw[dashbox] (\sL,4.20) rectangle (\sR,6.60);
-\node[boxtitle] at (\sCx,6.38) {Ordinary RSS};
-\node[codestyle] at (\sCx,6.05) {susie\_rss(z,R)};
-\node[enhcode] at (\sCx,5.72) {susie\_rss(z,X)};
-\node[starmark] at (3.48,5.72) {$\bigstar$};
-\node[font=\itshape\scriptsize, text=textMain] at (\sCx,5.35) {Stochastic LD};
-\node[enhcode] at (\sCx,5.00) {susie\_rss(z,R,B{>}0)};
-\node[starmark] at (3.48,5.00) {$\bigstar$};
-\node[enhcode] at (\sCx,4.65) {susie\_rss(z,X,B=TRUE)};
-\node[starmark] at (3.48,4.65) {$\bigstar$};
+\draw[dashbox] (\sL,5.55) rectangle (\sR,6.55);
+\node[boxtitle] at (\sCx,6.33) {Ordinary RSS};
+\node[codestyle] at (\sCx,6.00) {susie\_rss(z,R,n)};
+\node[enhcode] at (\sCx,5.70) {susie\_rss(z,X,n)};
+\node[starmark] at (3.48,5.70) {$\bigstar$};
 
-% -- Regularized LD --
-\draw[dashbox] (\sL,1.10) rectangle (\sR,3.90);
-\node[boxtitle] at (\sCx,3.68) {Regularized LD ($\lambda{>}0$)};
-\node[codestyle] at (\sCx,3.35) {susie\_rss(z,R,$\lambda${>}0)};
-\node[enhcode] at (\sCx,3.02) {susie\_rss(z,X,$\lambda${>}0)};
-\node[starmark] at (3.48,3.02) {$\bigstar$};
-\node[font=\itshape\scriptsize, text=textMain, text width=3.5cm, align=center]
-    at (\sCx,2.60) {Mixture of LD References};
-\node[enhcode] at (\sCx,2.18) {susie\_rss(z,};
-\node[enhcode] at (\sCx,1.85) {X=list(X$_1$,\ldots,X$_K$),};
-\node[enhcode] at (\sCx,1.52) {B=TRUE,$\lambda${>}0)};
-\node[starmark] at (3.48,1.52) {$\bigstar$};
+% -- LD Mismatch Correction --
+\draw[dashbox] (\sL,3.40) rectangle (\sR,5.20);
+\node[boxtitle] at (\sCx,4.97) {LD Mismatch Correction};
+\node[enhcode] at (\sCx,4.65) {susie\_rss(z,R,n,};
+\node[enhcode] at (\sCx,4.35) {R\_finite=B)};
+\node[starmark] at (3.48,4.35) {$\bigstar$};
+\node[enhcode] at (\sCx,3.95) {susie\_rss(z,R,n,};
+\node[enhcode] at (\sCx,3.65) {R\_mismatch="eb")};
+\node[starmark] at (3.48,3.65) {$\bigstar$};
+
+% -- Mixture of LD References --
+\draw[dashbox] (\sL,1.10) rectangle (\sR,3.05);
+\node[boxtitle] at (\sCx,2.83) {Mixture of LD References};
+\node[enhcode] at (\sCx,2.45) {susie\_rss(z,};
+\node[enhcode] at (\sCx,2.15) {R=list(R$_1$,\ldots,R$_K$),n)};
+\node[starmark] at (3.48,2.15) {$\bigstar$};
+\node[enhcode] at (\sCx,1.75) {susie\_rss(z,};
+\node[enhcode] at (\sCx,1.45) {X=list(X$_1$,\ldots,X$_K$),n)};
+\node[starmark] at (3.48,1.45) {$\bigstar$};
 
 
 % ============================================================
@@ -140,7 +142,7 @@
 \draw[dashbox] (4.40,2.62) rectangle (7.50,3.78);
 \node[codestyle] at (5.95,3.55) {<method>.individual()};
 \node[codestyle] at (5.95,3.20) {<method>.ss()};
-\node[codestyle] at (5.95,2.85) {<method>.rss\_lambda()};
+\node[codestyle] at (5.95,2.85) {<method>.ss\_mixture()};
 
 % --- mvsusieR pill ---
 \draw[mvPurple, rounded corners=3pt, line width=0.5pt, fill=mvPurple!6]
@@ -180,37 +182,43 @@
 \pgfmathsetmacro{\wCx}{(\wL+\wR)/2}
 
 % -- Unmappable Effect Models --
-\draw[dashbox] (\wL,5.25) rectangle (\wR,6.15);
-\node[boxtitle] at (\wCx,5.93) {Unmappable Effect Models};
+\draw[dashbox] (\wL,5.40) rectangle (\wR,6.15);
+\node[boxtitle] at (\wCx,5.97) {Unmappable Effect Models};
 
 % SuSiE-ash pill
 \draw[ashRed, rounded corners=2pt, line width=0.5pt, fill=ashRed!8]
-    (8.55,5.38) rectangle (9.90,5.72);
-\node[font=\bfseries\scriptsize, text=ashRed] at (9.225,5.55) {SuSiE-ash};
-\node[starmark] at (10.08,5.55) {$\bigstar$};
+    (8.55,5.50) rectangle (9.90,5.80);
+\node[font=\bfseries\scriptsize, text=ashRed] at (9.225,5.65) {SuSiE-ash};
+\node[starmark] at (10.08,5.65) {$\bigstar$};
 
 % SuSiE-inf pill
 \draw[infGreen, rounded corners=2pt, line width=0.5pt, fill=infGreen!8]
-    (10.30,5.38) rectangle (11.65,5.72);
-\node[font=\bfseries\scriptsize, text=infGreen] at (10.975,5.55) {SuSiE-inf};
-\node[starmark] at (11.85,5.55) {$\bigstar$};
+    (10.30,5.50) rectangle (11.65,5.80);
+\node[font=\bfseries\scriptsize, text=infGreen] at (10.975,5.65) {SuSiE-inf};
+\node[starmark] at (11.85,5.65) {$\bigstar$};
 
-% -- Residual Variance Estimation --
-\draw[dashbox] (\wL,3.20) rectangle (\wR,5.00);
-\node[boxtitle] at (\wCx,4.78) {SER and Residual Variances};
-\node[font=\scriptsize, text=textMain] at (\wCx,4.40) {Maximum ELBO};
-\node[enhtext] at (\wCx,4.10) {Method of Moments};
-\node[starmark] at (11.85,4.10) {$\bigstar$};
-\node[enhtext] at (\wCx,3.80) {Inverse Gamma Prior};
-\node[starmark] at (11.85,3.80) {$\bigstar$};
-\node[enhtext] at (\wCx,3.50) {Stochastic LD Correction};
-\node[starmark] at (11.85,3.50) {$\bigstar$};
+% -- LD Mismatch Correction --
+\draw[dashbox] (\wL,4.30) rectangle (\wR,5.25);
+\node[boxtitle] at (\wCx,5.03) {LD Mismatch Correction};
+\node[enhtext] at (\wCx,4.73) {Finite Reference Panel};
+\node[starmark] at (11.85,4.73) {$\bigstar$};
+\node[enhtext] at (\wCx,4.43) {Empirical Bayes Mismatch};
+\node[starmark] at (11.85,4.43) {$\bigstar$};
+
+% -- SER and Residual Variances --
+\draw[dashbox] (\wL,2.95) rectangle (\wR,4.15);
+\node[boxtitle] at (\wCx,4.00) {SER and Residual Variances};
+\node[font=\scriptsize, text=textMain] at (\wCx,3.70) {Maximum ELBO};
+\node[enhtext] at (\wCx,3.40) {Method of Moments};
+\node[starmark] at (11.85,3.40) {$\bigstar$};
+\node[enhtext] at (\wCx,3.10) {Inverse Gamma Prior};
+\node[starmark] at (11.85,3.10) {$\bigstar$};
 
 % -- Multi-Panel LD Weight Update --
-\draw[dashbox] (\wL,2.05) rectangle (\wR,2.95);
-\node[boxtitle] at (\wCx,2.72) {Multi-Panel LD Weight Update};
-\node[font=\itshape\scriptsize, text=enhanced] at (\wCx,2.30) {Mixture Weight Optimization};
-\node[starmark] at (11.85,2.30) {$\bigstar$};
+\draw[dashbox] (\wL,2.05) rectangle (\wR,2.80);
+\node[boxtitle] at (\wCx,2.60) {Multi-Panel LD Weight Update};
+\node[font=\itshape\scriptsize, text=enhanced] at (\wCx,2.25) {Mixture Weight Optimization};
+\node[starmark] at (11.85,2.25) {$\bigstar$};
 
 % --- Arrow ---
 \draw[arrowline] (10.15,1.86) -- (10.15,1.74);
@@ -281,11 +289,13 @@
 % --- Interface -> Constructor bus ---
 \pgfmathsetmacro{\busX}{4.00}
 \pgfmathsetmacro{\iMid}{(7.55+8.40)/2}
-\pgfmathsetmacro{\sMidA}{(4.20+6.60)/2}
-\pgfmathsetmacro{\sMidB}{(1.10+3.90)/2}
+\pgfmathsetmacro{\sMidA}{(5.55+6.55)/2}
+\pgfmathsetmacro{\sMidM}{(3.40+5.20)/2}
+\pgfmathsetmacro{\sMidB}{(1.10+3.05)/2}
 
 \draw[busline] (3.75,\iMid) -- (\busX,\iMid);
 \draw[busline] (3.75,\sMidA) -- (\busX,\sMidA);
+\draw[busline] (3.75,\sMidM) -- (\busX,\sMidM);
 \draw[busline] (3.75,\sMidB) -- (\busX,\sMidB);
 \draw[busline] (\busX,\iMid) -- (\busX,\sMidB);
 \pgfmathsetmacro{\dcMid}{(5.95+8.40)/2}

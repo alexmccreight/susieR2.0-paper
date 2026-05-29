@@ -1,126 +1,135 @@
 #!/usr/bin/env Rscript
-
 # =============================================================================
-# Supplemental S6: Per-method runtime by scenario
+# Supplemental S6: susieR 1.0 -> 2.0 RSS-lambda speedup
 # =============================================================================
-# Single-panel bar plot of mean per-fit wall time (seconds) for SuSiE,
-# SuSiE-ash, SuSiE-inf, dodged within each scenario on the x-axis. Error bars
-# = SE across replicates.
+# Grouped bar chart showing fold speedup over susieR 1.0 (susie_rss_lambda)
+# for susieR 2.0 (R input) and susieR 2.0 (X input), across p/n ratios
+# (p = 5,000 fixed).
 #
-# Input:  data/s6_runtime_data.rds  (built by extract_S6_data.R)
-# Output: S6.pdf, S6.png
+# Two stories in one plot:
+#   - Algorithm improvement: consistent fold speedup (LD-matrix bars)
+#   - X-input advantage:     grows with p/n  (gap between genotype and LD bars)
+#
+# Input:  data/rss_lambda_comparison_data/*.rds  (built by data_generation/)
+# Output: S6.{pdf,png}
 # =============================================================================
 
-suppressMessages({
-  library(ggplot2)
-  library(dplyr)
-})
+library(ggplot2)
+library(dplyr)
+library(tidyr)
 
 # =============================================================================
 # Paths
 # =============================================================================
 
-s6_dir   <- "/Users/alexmccreight/StatFunGen/susieR2.0-benchmark/final_scripts/supplemental/S6"
-data_dir <- file.path(s6_dir, "data")
-data_path <- file.path(data_dir, "s6_runtime_data.rds")
-
-if (!file.exists(data_path)) {
-  stop("Run extract_S6_data.R first to produce ", data_path)
-}
+s6_dir   <- "/Users/alexmccreight/StatFunGen/susieR2.0-paper/Supplementary_Figures/S6"
+data_dir <- file.path(s6_dir, "data", "rss_lambda_comparison_data")
 
 # =============================================================================
-# Load
+# Load and summarize
 # =============================================================================
 
-cat("Loading data...\n")
-dat <- readRDS(data_path)
-runtime_data    <- dat$runtime_data
-method_levels   <- dat$meta$method_levels      # SuSiE, SuSiE-ash, SuSiE-inf
-scenario_levels <- dat$meta$scenario_levels    # Sparse, Complex, Complex S1, Complex S2
+cat("Loading benchmark results...\n")
 
-# Defensive: re-apply factor levels in case the saved rds was modified.
-runtime_data$method   <- factor(runtime_data$method,   levels = method_levels)
-runtime_data$scenario <- factor(runtime_data$scenario, levels = scenario_levels)
+files <- list.files(data_dir, pattern = "[.]rds$", full.names = TRUE)
 
-cat(sprintf("Total rows: %d\n", nrow(runtime_data)))
+summary_list <- lapply(files, function(f) {
+  d <- readRDS(f)
+  data.frame(
+    n = d$parameters$n,
+    p = d$parameters$p,
+    median_1.0_R = median(sapply(d$replicates, `[[`, "time_1.0_R")),
+    median_2.0_R = median(sapply(d$replicates, `[[`, "time_2.0_R")),
+    median_2.0_X = median(sapply(d$replicates, `[[`, "time_2.0_X"))
+  )
+})
+
+df_all <- bind_rows(summary_list)
 
 # =============================================================================
-# Aggregate: mean +/- SE per (scenario, method)
+# Fixed p = 5,000 — compute fold speedups over susieR 1.0
 # =============================================================================
 
-agg <- runtime_data %>%
-  group_by(scenario, method) %>%
-  summarise(
-    mean_time = mean(elapsed_time, na.rm = TRUE),
-    se_time   = sd(elapsed_time,   na.rm = TRUE) / sqrt(sum(!is.na(elapsed_time))),
-    n         = sum(!is.na(elapsed_time)),
-    .groups   = "drop"
+df <- df_all %>%
+  filter(p == 5000) %>%
+  mutate(
+    pn_ratio = as.integer(p / n),
+    fold_R   = median_1.0_R / median_2.0_R,
+    fold_X   = median_1.0_R / median_2.0_X
+  ) %>%
+  arrange(pn_ratio)
+
+cat(sprintf("  %d conditions (p = 5000, p/n = %s)\n",
+            nrow(df), paste(df$pn_ratio, collapse = ", ")))
+
+# Pivot for ggplot
+df_fold <- df %>%
+  select(pn_ratio, fold_R, fold_X) %>%
+  pivot_longer(
+    cols      = c(fold_R, fold_X),
+    names_to  = "method",
+    values_to = "fold"
+  ) %>%
+  mutate(
+    method = factor(method,
+      levels = c("fold_R", "fold_X"),
+      labels = c("LD Matrix", "Genotype Matrix")
+    ),
+    pn_label   = factor(pn_ratio, levels = sort(unique(pn_ratio))),
+    fold_label = paste0(sprintf("%.1f", fold), "\u00d7")
   )
 
-cat("\n=== Aggregated mean elapsed_time (s) ===\n")
-print(as.data.frame(agg))
+# =============================================================================
+# Plot
+# =============================================================================
 
-# =============================================================================
-# Aesthetics (match S1 / S5 conventions)
-# =============================================================================
+cat("Creating fold-speedup plot...\n")
+
+dodge_w <- 0.7
 
 method_colors <- c(
-  "SuSiE"     = "#4A90E2",
-  "SuSiE-ash" = "#E53935",
-  "SuSiE-inf" = "#7CB342"
+  "LD Matrix"       = "#DF8A2C",
+  "Genotype Matrix" = "#2E6B9E"
 )
 
-# Display labels for x-axis (descriptive simulation names; matches S5)
-scenario_labels <- c(
-  "Sparse"     = "Sparse",
-  "Complex"    = "Oligogenic Effects on a\nPolygenic Background",
-  "Complex S1" = "Oligogenic Effects on a Moderate\nInfinitesimal Background",
-  "Complex S2" = "Oligogenic Effects on an Extensive\nInfinitesimal Background"
-)
-
-theme_s6 <- theme_classic(base_size = 14) +
-  theme(
-    axis.title       = element_text(face = "bold", size = 18),
-    axis.text        = element_text(color = "black", size = 15),
-    axis.text.x      = element_text(face = "bold", size = 11, lineheight = 0.9),
-    legend.position  = "bottom",
-    legend.title     = element_blank(),
-    legend.text      = element_text(face = "bold", size = 14),
-    plot.margin      = margin(10, 10, 10, 10)
-  )
-
-# =============================================================================
-# Bar plot: scenario on x, method as fill, dodged with SE error bars
-# =============================================================================
-
-panel <- ggplot(agg, aes(x = scenario, y = mean_time, fill = method)) +
-  geom_bar(stat = "identity", position = position_dodge(width = 0.8),
-           width = 0.7) +
-  geom_errorbar(
-    aes(ymin = pmax(0, mean_time - se_time),
-        ymax = mean_time + se_time),
-    position = position_dodge(width = 0.8),
-    width    = 0.18,
-    linewidth = 0.5
+p_fold <- ggplot(df_fold, aes(x = pn_label, y = fold, fill = method)) +
+  geom_col(position = position_dodge(width = dodge_w), width = 0.6) +
+  geom_hline(yintercept = 1, linetype = "dotted", color = "red",
+             linewidth = 0.8) +
+  scale_fill_manual(values = method_colors, name = NULL) +
+  scale_y_continuous(
+    expand = expansion(mult = c(0, 0.15)),
+    breaks = seq(0, 18, by = 2)
   ) +
-  scale_fill_manual(values = method_colors) +
-  scale_x_discrete(labels = scenario_labels) +
-  scale_y_continuous(expand = expansion(mult = c(0, 0.05))) +
-  labs(x = "Scenario", y = "Mean Runtime (s)") +
-  theme_s6
+  labs(
+    x = "Features / Samples",
+    y = "Speedup (fold)"
+  ) +
+  theme_classic(base_size = 14) +
+  theme(
+    axis.title   = element_text(face = "bold", size = 16),
+    axis.text    = element_text(color = "black", size = 13),
+    legend.position  = c(0.5, 0.97),
+    legend.justification = c(0.5, 1),
+    legend.direction = "horizontal",
+    legend.text = element_text(size = 12),
+    legend.key.size = unit(0.5, "cm"),
+    legend.spacing.x = unit(0.15, "cm"),
+    legend.background = element_rect(fill = alpha("white", 0.85), color = NA),
+    plot.margin      = margin(8, 12, 8, 8)
+  )
 
 # =============================================================================
 # Save
 # =============================================================================
 
-output_pdf <- file.path(s6_dir, "S6.pdf")
-ggsave(output_pdf, panel,
-       width = 14, height = 6, units = "in", bg = "white")
-cat(sprintf("Saved: %s\n", output_pdf))
+cat("Saving outputs...\n")
 
-output_png <- file.path(s6_dir, "S6.png")
-ggsave(output_png, panel,
-       width = 14, height = 6, units = "in", dpi = 300, bg = "white")
-cat(sprintf("Saved: %s\n", output_png))
+ggsave(file.path(s6_dir, "S6.pdf"), p_fold,
+       width = 6.5, height = 5, units = "in", bg = "white")
+ggsave(file.path(s6_dir, "S6.png"), p_fold,
+       width = 6.5, height = 5, units = "in", dpi = 300, bg = "white")
 
-cat("\nDone!\n")
+cat(sprintf("Saved: %s\n", file.path(s6_dir, "S6.pdf")))
+cat(sprintf("Saved: %s\n", file.path(s6_dir, "S6.png")))
+cat("Done!\n")

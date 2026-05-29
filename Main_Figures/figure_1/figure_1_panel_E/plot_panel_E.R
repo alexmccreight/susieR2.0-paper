@@ -17,7 +17,7 @@ library(dplyr)
 # Paths
 # =============================================================================
 
-fig1_dir   <- "/Users/alexmccreight/StatFunGen/susieR2.0-benchmark/final_scripts/figure_1"
+fig1_dir   <- "/Users/alexmccreight/StatFunGen/susieR2.0-paper/Main_Figures/figure_1"
 script_dir <- file.path(fig1_dir, "figure_1_panel_E")
 data_path  <- file.path(fig1_dir, "data", "complex_S2_finemapping_summary.rds")
 

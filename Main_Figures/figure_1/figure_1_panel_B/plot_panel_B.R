@@ -1,129 +1,104 @@
 #!/usr/bin/env Rscript
 # =============================================================================
-# Fold-Change Speed Benchmark: susieR 1.0 vs susieR 2.0
+# Panel B (SuSiE-inf): Fold-speedup over the OLD reference at fixed p = 5000
 # =============================================================================
-# Grouped bar chart showing fold speedup over susieR 1.0 (R)
-# for susieR 2.0 (R) and susieR 2.0 (X), across p/n ratios (p = 5,000 fixed).
+# Grouped bar chart of fold speedup over OLD-LD (the ORIGINAL RSS + eigen
+# method), across p/n ratios (p = 5,000 fixed):
+#   - "Genotype Matrix" = median(time_old_LD) / median(time_new_X)   [susie(X,y), contribution ii]
+#   - "LD Matrix"       = median(time_old_LD) / median(time_new_LD)  [susie_rss(R), contribution i]
+# Uses ratio-of-medians. Same grouped-bar style as the RSS-lambda panel that
+# now lives in Supplementary Figure S6.
 #
-# Two stories in one plot:
-#   - Algorithm improvement: consistent ~7-8x (orange bars)
-#   - X-input advantage:     grows with p/n  (gap between teal and orange)
-#
-# Input:  rss_lambda_comparison_data/*.rds
+# Input:  ../data/panel_B/susie_inf_comparison_data/benchmark_susieinf_*_nrep*.rds
 # Output: panel_B.{pdf,png}, panel_B_plot.rds
 # =============================================================================
 
-library(ggplot2)
-library(dplyr)
-library(tidyr)
+suppressPackageStartupMessages({
+  library(ggplot2)
+  library(dplyr)
+  library(tidyr)
+})
 
 # =============================================================================
 # Paths
 # =============================================================================
 
-fig1_dir   <- "/Users/alexmccreight/StatFunGen/susieR2.0-benchmark/final_scripts/figure_1"
-script_dir <- file.path(fig1_dir, "figure_1_panel_B")
-data_dir   <- file.path(fig1_dir, "data", "panel_B", "rss_lambda_comparison_data")
+fig1_dir    <- "/Users/alexmccreight/StatFunGen/susieR2.0-paper/Main_Figures/figure_1"
+script_dir  <- file.path(fig1_dir, "figure_1_panel_B")
+results_dir <- file.path(fig1_dir, "data", "panel_B", "susie_inf_comparison_data")
 
-# =============================================================================
-# Load and summarize
-# =============================================================================
-
-cat("Loading benchmark results...\n")
-
-files <- list.files(data_dir, pattern = "[.]rds$", full.names = TRUE)
+# ---- Load combined results (exclude per-job _rep files) ----
+files <- list.files(results_dir, pattern = "^benchmark_susieinf_.*nrep[0-9]+\\.rds$",
+                    full.names = TRUE)
+files <- files[!grepl("_rep[0-9]+-[0-9]+\\.rds$", files)]
+if (length(files) == 0) {
+  stop("No combined result files in ", results_dir,
+       " — run the sweep + combine step first.")
+}
 
 summary_list <- lapply(files, function(f) {
   d <- readRDS(f)
+  reps <- d$replicates[!sapply(d$replicates, is.null)]
+  med <- function(field) median(sapply(reps, `[[`, field), na.rm = TRUE)
   data.frame(
     n = d$parameters$n,
     p = d$parameters$p,
-    median_1.0_R = median(sapply(d$replicates, `[[`, "time_1.0_R")),
-    median_2.0_R = median(sapply(d$replicates, `[[`, "time_2.0_R")),
-    median_2.0_X = median(sapply(d$replicates, `[[`, "time_2.0_X"))
+    median_old_LD = med("time_old_LD"),
+    median_new_X  = med("time_new_X"),
+    median_new_LD = med("time_new_LD")
   )
 })
-
 df_all <- bind_rows(summary_list)
 
-# =============================================================================
-# Fixed p = 5,000 — compute fold speedups over susieR 1.0
-# =============================================================================
-
+# ---- Fixed p = 5000: fold speedups over OLD-LD (original RSS) ----
 df <- df_all %>%
   filter(p == 5000) %>%
   mutate(
-    pn_ratio = as.integer(p / n),
-    fold_R   = median_1.0_R / median_2.0_R,
-    fold_X   = median_1.0_R / median_2.0_X
+    pn_ratio = as.integer(round(p / n)),
+    fold_X   = median_old_LD / median_new_X,    # Genotype Matrix (NEW-X individual, contribution ii)
+    fold_LD  = median_old_LD / median_new_LD    # LD Matrix (NEW-LD susie_rss, contribution i)
   ) %>%
   arrange(pn_ratio)
 
 cat(sprintf("  %d conditions (p = 5000, p/n = %s)\n",
             nrow(df), paste(df$pn_ratio, collapse = ", ")))
 
-# Pivot for ggplot
 df_fold <- df %>%
-  select(pn_ratio, fold_R, fold_X) %>%
-  pivot_longer(
-    cols      = c(fold_R, fold_X),
-    names_to  = "method",
-    values_to = "fold"
-  ) %>%
+  select(pn_ratio, fold_LD, fold_X) %>%
+  pivot_longer(cols = c(fold_LD, fold_X), names_to = "method", values_to = "fold") %>%
   mutate(
-    method = factor(method,
-      levels = c("fold_R", "fold_X"),
-      labels = c("LD Matrix", "Genotype Matrix")
-    ),
-    pn_label   = factor(pn_ratio, levels = sort(unique(pn_ratio))),
-    fold_label = paste0(sprintf("%.1f", fold), "\u00d7")
+    method   = factor(method, levels = c("fold_LD", "fold_X"),
+                      labels = c("LD Matrix", "Genotype Matrix")),
+    pn_label = factor(pn_ratio, levels = sort(unique(pn_ratio))),
+    fold_label = paste0(sprintf("%.1f", fold), "×")
   )
 
-# =============================================================================
-# Plot
-# =============================================================================
-
-cat("Creating fold-speedup plot...\n")
-
+# ---- Plot (same style as the S6 RSS-lambda panel) ----
 dodge_w <- 0.7
-
-method_colors <- c(
-  "LD Matrix"       = "#DF8A2C",
-  "Genotype Matrix" = "#2E6B9E"
-)
+method_colors <- c("LD Matrix" = "#DF8A2C", "Genotype Matrix" = "#2E6B9E")
 
 p_fold <- ggplot(df_fold, aes(x = pn_label, y = fold, fill = method)) +
   geom_col(position = position_dodge(width = dodge_w), width = 0.6) +
-  geom_hline(yintercept = 1, linetype = "dotted", color = "red",
-             linewidth = 0.8) +
+  geom_hline(yintercept = 1, linetype = "dotted", color = "red", linewidth = 0.8) +
   scale_fill_manual(values = method_colors, name = NULL) +
-  scale_y_continuous(
-    expand = expansion(mult = c(0, 0.15)),
-    breaks = seq(0, 18, by = 2)
-  ) +
-  labs(
-    x = "Features / Samples",
-    y = "Speedup (fold)"
-  ) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.15))) +
+  labs(x = "Features / Samples", y = "Speedup (fold)") +
   theme_classic(base_size = 11) +
   theme(
-    axis.title   = element_text(face = "bold", size = 10),
-    axis.text    = element_text(color = "black", size = 9),
-    legend.position  = c(0.5, 0.97),
+    axis.title = element_text(face = "bold", size = 10),
+    axis.text  = element_text(color = "black", size = 9),
+    legend.position = c(0.5, 0.97),
     legend.justification = c(0.5, 1),
     legend.direction = "horizontal",
     legend.text = element_text(size = 8),
     legend.key.size = unit(0.35, "cm"),
-    legend.spacing.x = unit(0.1, "cm"),
     legend.background = element_rect(fill = alpha("white", 0.85), color = NA),
-    plot.margin      = margin(5, 10, 5, 5)
+    plot.margin = margin(5, 10, 5, 5)
   )
 
 # =============================================================================
 # Save
 # =============================================================================
-
-cat("Saving outputs...\n")
 
 ggsave(file.path(script_dir, "panel_B.pdf"), p_fold,
        width = 4.5, height = 4, units = "in", bg = "white")
@@ -131,4 +106,5 @@ ggsave(file.path(script_dir, "panel_B.png"), p_fold,
        width = 4.5, height = 4, units = "in", dpi = 300, bg = "white")
 saveRDS(p_fold, file.path(script_dir, "panel_B_plot.rds"))
 
-cat("Done!\n")
+cat("Done. Fold speedups (p = 5000):\n")
+print(df %>% select(n, pn_ratio, fold_X, fold_LD))
