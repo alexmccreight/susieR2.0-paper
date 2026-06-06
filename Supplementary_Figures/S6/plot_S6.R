@@ -102,7 +102,7 @@ p_fold <- ggplot(df_fold, aes(x = pn_label, y = fold, fill = method)) +
     breaks = seq(0, 18, by = 2)
   ) +
   labs(
-    x = "Features / Samples",
+    x = "Feature-Sample Ratio",
     y = "Speedup (fold)"
   ) +
   theme_classic(base_size = 14) +

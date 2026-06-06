@@ -1,38 +1,45 @@
 #!/usr/bin/env Rscript
 
 # =============================================================================
-# Supplemental S1: Extract sparse fine-mapping data
+# Supplemental S1: Extract sparse fine-mapping data (WITH LD extension = 0.99)
 # =============================================================================
-# Reads raw per-K RDS files (500 replicates each), extracts Power/FDR metrics,
-# and saves a summary RDS for fast plotting.
+# Reads the per-K *_ldext.rds files (500 replicates each), takes the credible-set
+# Power/FDR metrics for the LD-extension construction (version = "xcorr_ext"),
+# and saves a summary RDS for fast plotting (panels S1A / S1B).
 #
-# Input:  sim_nrep500_sparse_h2persnp0.03_K{1-5}_n1000.rds
-# Output: data/finemapping_data.rds
+# Only S1A/S1B (credible-set level) use this file. The PIP-level panels
+# (S1C-S1J) are produced by extract_pip_roc.R / extract_pip_calibration.R and
+# are unaffected by LD extension.
+#
+# Input:  500_rep_results/sparse/sim_nrep500_sparse_h2persnp0.03_K{1-5}_n1000_ldext.rds
+# Output: data/finemapping_data.rds   (in this production S1 folder)
 # =============================================================================
 
 library(dplyr)
 
 # Paths
-s1_dir     <- "/Users/alexmccreight/StatFunGen/susieR2.0-benchmark/final_scripts/supplemental/S1"
+s1_dir     <- "/Users/alexmccreight/StatFunGen/susieR2.0-paper/Supplementary_Figures/S1"
 data_dir   <- "/Users/alexmccreight/StatFunGen/susieR2.0-benchmark/final_scripts/500_rep_results/sparse"
 output_dir <- file.path(s1_dir, "data")
 
 # Parameters
 h2_value <- 0.03
 K_values <- 1:5
+VERSION  <- "xcorr_ext"   # LD-extension (0.99) credible sets
 
 # -----------------------------------------------------------------------------
-# Extract metrics from a single RDS file
+# Extract metrics from a single *_ldext.rds file
 # -----------------------------------------------------------------------------
 extract_metrics <- function(file_path, h2_per_snp, K) {
   data <- readRDS(file_path)
 
   metrics_list <- lapply(data$replicates, function(rep) rep$metrics)
-  all_metrics <- bind_rows(metrics_list)
+  all_metrics  <- bind_rows(metrics_list)
 
-  # Keep only the three main methods
+  # Keep only the LD-extension version and the three main methods
   all_metrics <- all_metrics %>%
-    filter(Method %in% c("SuSiE", "SuSiE-inf", "SuSiE.ash"))
+    filter(version == VERSION,
+           Method %in% c("SuSiE", "SuSiE-inf", "SuSiE.ash"))
 
   summary_metrics <- all_metrics %>%
     group_by(Method) %>%
@@ -55,12 +62,13 @@ extract_metrics <- function(file_path, h2_per_snp, K) {
 # -----------------------------------------------------------------------------
 # Process all K values
 # -----------------------------------------------------------------------------
-cat(sprintf("Extracting sparse data (h2_per_snp = %.2f, 500 reps)\n", h2_value))
+cat(sprintf("Extracting sparse data WITH LD extension (version = %s, h2_per_snp = %.2f, 500 reps)\n",
+            VERSION, h2_value))
 
 all_data <- data.frame()
 
 for (K in K_values) {
-  file_name <- sprintf("sim_nrep500_sparse_h2persnp0.03_K%d_n1000.rds", K)
+  file_name <- sprintf("sim_nrep500_sparse_h2persnp0.03_K%d_n1000_ldext.rds", K)
   file_path <- file.path(data_dir, file_name)
 
   if (file.exists(file_path)) {
@@ -86,3 +94,4 @@ cat(sprintf("Saved to: %s\n", output_file))
 cat(sprintf("Dimensions: %d rows x %d cols\n", nrow(all_data), ncol(all_data)))
 cat(sprintf("Methods: %s\n", paste(levels(all_data$Method), collapse = ", ")))
 cat(sprintf("K values: %s\n", paste(sort(unique(all_data$K)), collapse = ", ")))
+print(all_data[order(all_data$K, all_data$Method), c("Method","K","Power_mean","FDR_mean")])

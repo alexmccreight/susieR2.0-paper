@@ -82,7 +82,7 @@ p_fold <- ggplot(df_fold, aes(x = pn_label, y = fold, fill = method)) +
   geom_hline(yintercept = 1, linetype = "dotted", color = "red", linewidth = 0.8) +
   scale_fill_manual(values = method_colors, name = NULL) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.15))) +
-  labs(x = "Features / Samples", y = "Speedup (fold)") +
+  labs(x = "Feature-Sample Ratio", y = "Speedup (fold)") +
   theme_classic(base_size = 11) +
   theme(
     axis.title = element_text(face = "bold", size = 10),
