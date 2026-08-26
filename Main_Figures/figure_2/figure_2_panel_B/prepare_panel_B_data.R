@@ -3,11 +3,17 @@
 # =============================================================================
 # Figure 2, Panel B — Data Preparation
 # =============================================================================
-# Loads the CS group assignments (from Jaccard >= 0.75 concordance analysis),
-# computes signal-level concordance counts for the 7 intersection groups,
-# and outputs a summary data frame for UpSet-style plotting.
+# Loads the CS group assignments (from the Jaccard >= 0.75 concordance
+# analysis), counts signals per cross-method intersection group, and outputs a
+# summary for the UpSet-style plot.
 #
-# Input:  alphagenome_cs_group_assignments.rds (from alphagenome_cs_group_comparison.R)
+# Method-agnostic: the set of methods is read from the assignments file, so the
+# same script serves main Figure 2 (SuSiE + SuSiE-inf -> 3 groups) and
+# Supplementary S11 (all three methods -> 7 groups).
+#
+# Input:  data/alphagenome_cs_group_assignments__standard_inf.rds
+#           (from alphagenome_cs_group_comparison.R; pass a different file as
+#            the first command-line argument to rebuild the S11 version)
 # Output: panel_B_data.rds
 # =============================================================================
 
@@ -15,77 +21,92 @@
 # Paths
 # =============================================================================
 
-fig2_dir   <- "/Users/alexmccreight/StatFunGen/susieR2.0-benchmark/final_scripts/figure_2"
-input_file <- file.path(fig2_dir, "data", "alphagenome_cs_group_assignments.rds")
+source("R/paths.R")
+source("R/aesthetics.R")
+
+fig2_dir   <- fig_dir(2)
 output_dir <- file.path(fig2_dir, "figure_2_panel_B")
+
+.cli <- commandArgs(trailingOnly = TRUE)
+input_file <- if (length(.cli) > 0 && nzchar(.cli[1])) {
+  .cli[1]
+} else {
+  file.path(fig2_dir, "data", "alphagenome_cs_group_assignments__standard_inf.rds")
+}
+output_path <- if (length(.cli) > 1 && nzchar(.cli[2])) {
+  .cli[2]
+} else {
+  file.path(output_dir, "panel_B_data.rds")
+}
 
 # =============================================================================
 # Load data
 # =============================================================================
 
 cat("Loading group assignments...\n")
+cat(sprintf("  %s\n", basename(input_file)))
+if (!file.exists(input_file)) stop("Missing input: ", input_file)
 signals <- readRDS(input_file)
 cat(sprintf("  %d CS entries across %d signals\n",
             nrow(signals), length(unique(signals$signal_id))))
 
+METHOD_ORDER <- c("standard", "ash", "inf")
+DISPLAY      <- c(standard = "SuSiE", ash = "SuSiE-ash", inf = "SuSiE-inf")
+SHORT        <- c(standard = "SuSiE", ash = "ash",       inf = "inf")
+
+methods <- METHOD_ORDER[METHOD_ORDER %in% unique(signals$method)]
+cat(sprintf("  methods present: %s\n", paste(methods, collapse = ", ")))
+
 # =============================================================================
-# Classify signals into 7 concordance groups
+# Signal-level method membership
 # =============================================================================
 
 cat("Classifying signals into concordance groups...\n")
 
-signal_methods <- tapply(signals$method, signals$signal_id, function(m) {
-  sort(unique(m))
-}, simplify = FALSE)
+sig_ids <- sort(unique(signals$signal_id))
+present <- vapply(methods, function(m) {
+  sig_ids %in% unique(signals$signal_id[signals$method == m])
+}, logical(length(sig_ids)))
+present <- matrix(present, nrow = length(sig_ids),
+                  dimnames = list(NULL, methods))
 
-classify_group <- function(methods) {
-  has_std <- "standard" %in% methods
-  has_ash <- "ash" %in% methods
-  has_inf <- "inf" %in% methods
-
-  if (has_std && has_ash && has_inf) return("Consensus")
-  if (has_std && has_ash && !has_inf) return("SuSiE + ASH")
-  if (has_std && !has_ash && has_inf) return("SuSiE + INF")
-  if (!has_std && has_ash && has_inf) return("ASH + INF")
-  if (has_std && !has_ash && !has_inf) return("SuSiE only")
-  if (!has_std && has_ash && !has_inf) return("ASH only")
-  if (!has_std && !has_ash && has_inf) return("INF only")
-  return("Unknown")
+# Display label for a method set: all -> "Consensus"; one -> its display name;
+# otherwise the short names joined ("SuSiE&inf"), matching the palette keys in
+# R/aesthetics.R.
+label_for <- function(sel) {
+  ms <- methods[sel]
+  if (length(ms) == length(methods)) return("Consensus")
+  if (length(ms) == 1) return(unname(DISPLAY[ms]))
+  paste(unname(SHORT[ms]), collapse = "&")
 }
 
-signal_groups <- sapply(signal_methods, classify_group)
+signal_group <- apply(present, 1, label_for)
 
 # =============================================================================
-# Build signal-level concordance counts
+# Group ordering: Consensus, then pairwise, then single-method
 # =============================================================================
 
-group_labels <- c("Consensus", "SuSiE + ASH", "SuSiE + INF", "ASH + INF",
-                  "SuSiE only", "ASH only", "INF only")
+combos <- as.matrix(expand.grid(rep(list(c(FALSE, TRUE)), length(methods))))
+combos <- combos[rowSums(combos) > 0, , drop = FALSE]
+combos <- combos[order(-rowSums(combos),
+                       apply(combos, 1, function(r) which(r)[1])), , drop = FALSE]
+colnames(combos) <- methods
 
-signal_counts <- table(factor(signal_groups, levels = group_labels))
+group_labels     <- apply(combos, 1, label_for)
+group_membership <- combos
+rownames(group_membership) <- group_labels
+
+signal_counts <- table(factor(signal_group, levels = group_labels))
 
 concordance_df <- data.frame(
-  group       = factor(group_labels, levels = group_labels),
-  n_signals   = as.integer(signal_counts),
+  group     = factor(group_labels, levels = group_labels),
+  n_signals = as.integer(signal_counts),
   stringsAsFactors = FALSE
 )
 
-# Add method membership indicators (for the UpSet dot matrix)
-concordance_df$has_susie <- concordance_df$group %in%
-  c("Consensus", "SuSiE + ASH", "SuSiE + INF", "SuSiE only")
-concordance_df$has_ash   <- concordance_df$group %in%
-  c("Consensus", "SuSiE + ASH", "ASH + INF", "ASH only")
-concordance_df$has_inf   <- concordance_df$group %in%
-  c("Consensus", "SuSiE + INF", "ASH + INF", "INF only")
-
-# Compute total CSs per method
 method_totals <- data.frame(
-  method = c("SuSiE", "SuSiE-ash", "SuSiE-inf"),
-  total  = c(
-    sum(signals$method == "standard"),
-    sum(signals$method == "ash"),
-    sum(signals$method == "inf")
-  ),
+  method = unname(DISPLAY[methods]),
+  total  = vapply(methods, function(m) sum(signals$method == m), integer(1)),
   stringsAsFactors = FALSE
 )
 
@@ -96,24 +117,27 @@ method_totals <- data.frame(
 cat("\n--- Signal counts per concordance group ---\n")
 for (i in seq_len(nrow(concordance_df))) {
   cat(sprintf("  %-15s %5d signals\n",
-              concordance_df$group[i], concordance_df$n_signals[i]))
+              as.character(concordance_df$group[i]), concordance_df$n_signals[i]))
 }
 cat(sprintf("  %-15s %5d\n", "TOTAL", sum(concordance_df$n_signals)))
+stopifnot(sum(concordance_df$n_signals) == length(sig_ids))
 
 cat("\n--- Total CSs per method ---\n")
 for (i in seq_len(nrow(method_totals))) {
   cat(sprintf("  %-10s %5d CSs\n", method_totals$method[i], method_totals$total[i]))
 }
+stopifnot(sum(method_totals$total) == nrow(signals))
 
 # =============================================================================
 # Save
 # =============================================================================
 
 output <- list(
-  concordance   = concordance_df,
-  method_totals = method_totals
+  concordance      = concordance_df,
+  group_membership = group_membership,          # groups x methods, logical
+  methods          = unname(DISPLAY[methods]),  # display names, plot order
+  method_totals    = method_totals
 )
 
-output_path <- file.path(output_dir, "panel_B_data.rds")
 saveRDS(output, output_path)
 cat(sprintf("\nSaved: %s\n", output_path))

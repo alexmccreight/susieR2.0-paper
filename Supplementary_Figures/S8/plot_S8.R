@@ -21,7 +21,9 @@ suppressMessages({
   library(dplyr)
 })
 
-s8_dir    <- "/Users/alexmccreight/StatFunGen/susieR2.0-paper/Supplementary_Figures/S8"
+source("R/paths.R")
+
+s8_dir    <- supp_dir(8)
 data_path <- file.path(s8_dir, "data", "s8_finemapping_data.rds")
 if (!file.exists(data_path)) stop("Run extract_S8_data.R first.")
 

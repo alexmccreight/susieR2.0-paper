@@ -4,10 +4,14 @@
 # Figure 2, Panel E — Publication-ready slimmed version
 # =============================================================================
 # Tracks selected to tell the key story:
-#   Red CS sentinel (201806618) overlaps Exc. Neuron H3K27ac (invisible in bulk)
-#   Blue CS ASH/INF (201917641) overlaps bulk H3K27ac,
-#     astrocyte DNase, astrocyte H3K4me1, astrocyte H3K4me3
-#   Blue CS SuSiE (201915540) overlaps Exc. Neuron H3K27me3 (REPRESSIVE)
+#   Three distinct signals, none shared between the methods:
+#     SuSiE CS1      (201915540, blue)    overlaps Exc. Neuron H3K27me3
+#     SuSiE CS2      (diffuse,   magenta) six variants across ~150 kb
+#     SuSiE-inf CS1  (201917641, green)   overlaps bulk H3K27ac, astrocyte
+#                                         DNase, H3K4me1 and H3K4me3
+#
+# SuSiE-ash was removed from main Figure 2; the three-method version of this
+# panel is preserved in Supplementary Figure S11.
 #
 # Input:  panel_E_data.rds, celltype_tracks/*.bed, bulk BED files
 # Output: panel_E.pdf, panel_E.png, panel_E_plot.rds
@@ -20,7 +24,10 @@ library(cowplot)
 # Paths
 # =============================================================================
 
-fig2_dir   <- "/Users/alexmccreight/StatFunGen/susieR2.0-benchmark/final_scripts/figure_2"
+source("R/paths.R")
+source("R/aesthetics.R")
+
+fig2_dir   <- fig_dir(2)
 script_dir <- file.path(fig2_dir, "figure_2_panel_E")
 data_dir   <- file.path(fig2_dir, "data", "panel_E")
 data_path  <- file.path(script_dir, "panel_E_data.rds")
@@ -30,17 +37,33 @@ ct_dir     <- file.path(data_dir, "celltype_tracks")
 # Signal-based CS color mapping
 # =============================================================================
 
+# Three DISTINCT signals -- none is shared between the methods.
+#
+# SuSiE CS1 (chr1:201915540:A:G, PIP 0.996) and SuSiE-inf CS1
+# (chr1:201917641:TA:T, PIP 0.9996) were previously drawn in the same blue as a
+# "shared" signal. They are not shared: the two variants sit 2.1 kb apart but
+# correlate only r = -0.60 (r^2 = 0.37) on the DLPFC genotypes the models were
+# fit to, their strong-LD partners are disjoint haplotypes, and each method puts
+# near-certain PIP on a variant the other never flags. The concordance analysis
+# behind panels C and D agrees, classifying them Standard-specific and
+# Inf-specific respectively.
+#
+# So the two singleton CSs take their method colours (blue = SuSiE,
+# green = SuSiE-inf), matching those panels, and SuSiE's diffuse CS2 gets a
+# third hue. Magenta is the only strongly distinct colour left: every other
+# direction (green, purple, red, orange, amber) is already an epigenomic track
+# in the lower half of this panel.
 signal_map <- data.frame(
-  method = c("SuSiE",  "SuSiE",  "SuSiE-ash", "SuSiE-ash", "SuSiE-inf"),
-  cs_id  = c(1,        2,        1,            2,            1),
-  signal = c("A",      "C",      "B",          "A",          "A"),
+  method = c("SuSiE",  "SuSiE",  "SuSiE-inf"),
+  cs_id  = c(1,        2,        1),
+  signal = c("A",      "B",      "C"),
   stringsAsFactors = FALSE
 )
 
 signal_colors <- c(
-  "A" = "#1E88E5",   # blue   — shared Standard CS1/INF CS1/ASH CS2
-  "B" = "#E53935",   # red    — ASH-unique novel CS1
-  "C" = "#43A047"    # green  — Standard diffuse CS2
+  "A" = unname(method_colors[["SuSiE"]]),      # #4A90E2 blue    — SuSiE CS1
+  "B" = "#C2185B",                             #         magenta — SuSiE CS2 (diffuse)
+  "C" = unname(method_colors[["SuSiE-inf"]])   # #7CB342 green   — SuSiE-inf CS1
 )
 
 # =============================================================================
@@ -69,11 +92,46 @@ for (i in seq_len(nrow(signal_map))) {
 zoom_start <- 201.78   # Mb
 zoom_end   <- 201.97   # Mb
 
-ash_lead_pos_mb <- 201806618 / 1e6
-ash_cs1_positions_mb <- c(201799661, 201799712, 201801928,
-                          201805081, 201805083, 201806618) / 1e6
-shared_sentinel_pos_mb <- 201917641 / 1e6
+inf_cs1_pos_mb <- 201917641 / 1e6
 susie_cs1_pos_mb <- 201915540 / 1e6
+susie_cs2_pos_mb <- 201836798 / 1e6   # lead of the diffuse CS2 (PIP 0.571)
+
+# --- shared style for the three variant callouts -------------------------
+# Kept in one place so the boxes stay identical; LABEL_SIZE is the knob to
+# tune if the annotations need to read larger or smaller.
+LABEL_SIZE <- 8.5
+
+# Callout placement. The y axis is 0-1 (the 1.08 limit only keeps the PIP = 1
+# circle off the frame), so the boxes live inside the data area and have to be
+# fitted around the credible-set variants rather than above them.
+#
+# Two free bands do the job, using the fact that the boxes may overlap in x as
+# long as they do not overlap in y:
+#   * CS2 box sits high-left, bottom ~0.64 -- clears its own lead at PIP 0.571
+#     and the 0.157 / 0.036 members well below it.
+#   * CS1 box sits a step lower and further right, bottom ~0.44, left edge right
+#     of the CS2 lead at x = 201.8368 -- so it covers no magenta point, and the
+#     CS1 point itself (PIP 0.996) sits above the box.
+# Size is capped by the horizontal room between these two boxes; ~6.8 is the
+# largest that keeps a gap while staying inside the 201.78 window edge.
+# Segments are drawn before the labels, so the leader is hidden where it passes
+# under a box and only the part outside it shows.
+CS2_BOX_X   <- 201.8112
+CS2_BOX_TOP <- 1.00
+# CS1's box sits to the RIGHT of its variant, filling the otherwise empty
+# 201.92-201.97 window. Its left edge clears the CS1 circle at 201.9155, and its
+# bottom (~0.145) stays above the two CS2 members at 201.9296 / 201.9355, which
+# sit at PIP 0.019.
+CS1_BOX_X   <- 201.9445
+CS1_BOX_TOP <- 0.82
+
+# The SuSiE-inf track keeps its own anchor, left of its variant.
+INF_BOX_X   <- 201.8869
+INF_BOX_TOP <- 0.82
+LABEL_PAD  <- unit(0.22, "lines")
+LABEL_R    <- unit(0.1, "lines")
+LABEL_COL  <- "gray20"
+LEAD_COL   <- "gray30"
 
 # =============================================================================
 # Helper: build one PIP track
@@ -86,12 +144,10 @@ make_pip_track <- function(df, method_name, show_x_axis = FALSE) {
   d_cs <- d[d$in_cs, ]
 
   p <- ggplot() +
-    geom_vline(xintercept = ash_lead_pos_mb, linetype = "dashed",
-               color = "#E53935", linewidth = 0.8, alpha = 0.7) +
-    geom_vline(xintercept = shared_sentinel_pos_mb, linetype = "dashed",
-               color = "#1E88E5", linewidth = 0.8, alpha = 0.7) +
+    geom_vline(xintercept = inf_cs1_pos_mb, linetype = "dashed",
+               color = signal_colors[["C"]], linewidth = 0.8, alpha = 0.7) +
     geom_vline(xintercept = susie_cs1_pos_mb, linetype = "dotdash",
-               color = "#90CAF9", linewidth = 0.8, alpha = 0.8) +
+               color = signal_colors[["A"]], linewidth = 0.8, alpha = 0.8) +
     geom_point(data = d_bg, aes(x = pos_mb, y = pip),
                size = 1.2, color = "gray70", alpha = 0.5) +
     geom_point(data = d_cs, aes(x = pos_mb, y = pip, color = signal),
@@ -141,61 +197,58 @@ track_susie <- make_pip_track(pip_data, "SuSiE", show_x_axis = FALSE)
 
 track_susie <- track_susie +
   annotate("segment",
-           x = 201.88, xend = susie_cs1_pos_mb + 0.001,
-           y = 0.80, yend = 0.996,
+           x = CS1_BOX_X, xend = susie_cs1_pos_mb + 0.002,
+           y = CS1_BOX_TOP, yend = 0.990,
            linewidth = 0.4, color = "gray30") +
   annotate("label",
-           x = 201.88, y = 0.80,
+           x = CS1_BOX_X, y = CS1_BOX_TOP,
            label = 'atop("chr1:201915540:A:G", max~bgroup("|", Q[RNA], "|") == 0.125)',
            parse = TRUE,
            hjust = 0.5, vjust = 1,
-           size = 4.2, fontface = "bold",
-           fill = "white", label.r = unit(0.1, "lines"),
-           label.padding = unit(0.15, "lines"),
-           color = "gray20")
+           size = LABEL_SIZE, fontface = "bold",
+           fill = "white", label.r = LABEL_R,
+           label.padding = LABEL_PAD,
+           color = LABEL_COL)
 
-track_ash <- make_pip_track(pip_data, "SuSiE-ash", show_x_axis = FALSE)
-
-track_ash <- track_ash +
+# Magenta CS2 callout — same style, box to the left of its lead variant.
+track_susie <- track_susie +
   annotate("segment",
-           x = 201.85, xend = ash_lead_pos_mb + 0.003,
-           y = 0.40, yend = 0.37,
-           linewidth = 0.4, color = "gray30") +
+           x = CS2_BOX_X, xend = susie_cs2_pos_mb,
+           y = CS2_BOX_TOP, yend = 0.585,
+           linewidth = 0.4, color = LEAD_COL) +
   annotate("label",
-           x = 201.85, y = 0.40,
-           label = 'atop("chr1:201806618:G:A", max~bgroup("|", Q[RNA], "|") == 0.910)',
+           x = CS2_BOX_X, y = CS2_BOX_TOP,
+           label = 'atop("chr1:201836798:T:C", max~bgroup("|", Q[RNA], "|") == 0.913)',
            parse = TRUE,
-           hjust = 0.5, vjust = 0,
-           size = 5, fontface = "bold",
-           fill = "white", label.r = unit(0.1, "lines"),
-           label.padding = unit(0.15, "lines"),
-           color = "gray20")
+           hjust = 0.5, vjust = 1,
+           size = LABEL_SIZE, fontface = "bold",
+           fill = "white", label.r = LABEL_R,
+           label.padding = LABEL_PAD,
+           color = LABEL_COL)
 
 track_inf <- make_pip_track(pip_data, "SuSiE-inf", show_x_axis = FALSE)
 
 track_inf <- track_inf +
   annotate("segment",
-           x = 201.88, xend = shared_sentinel_pos_mb - 0.003,
-           y = 0.80, yend = 1.0,
+           x = INF_BOX_X, xend = inf_cs1_pos_mb - 0.002,
+           y = INF_BOX_TOP, yend = 0.992,
            linewidth = 0.4, color = "gray30") +
   annotate("label",
-           x = 201.88, y = 0.80,
+           x = INF_BOX_X, y = INF_BOX_TOP,
            label = 'atop("chr1:201917641:TA:T", max~bgroup("|", Q[RNA], "|") == 0.999)',
            parse = TRUE,
            hjust = 0.5, vjust = 1,
-           size = 4.2, fontface = "bold",
-           fill = "white", label.r = unit(0.1, "lines"),
-           label.padding = unit(0.15, "lines"),
-           color = "gray20")
+           size = LABEL_SIZE, fontface = "bold",
+           fill = "white", label.r = LABEL_R,
+           label.padding = LABEL_PAD,
+           color = LABEL_COL)
 
 # Shared vertical reference lines for annotation tracks
 vline_layer <- list(
-  geom_vline(xintercept = ash_lead_pos_mb, linetype = "dashed",
-             color = "#E53935", linewidth = 0.7, alpha = 0.7),
-  geom_vline(xintercept = shared_sentinel_pos_mb, linetype = "dashed",
-             color = "#1E88E5", linewidth = 0.7, alpha = 0.7),
+  geom_vline(xintercept = inf_cs1_pos_mb, linetype = "dashed",
+             color = signal_colors[["C"]], linewidth = 0.7, alpha = 0.7),
   geom_vline(xintercept = susie_cs1_pos_mb, linetype = "dotted",
-             color = "#90CAF9", linewidth = 0.7, alpha = 0.8)
+             color = signal_colors[["A"]], linewidth = 0.7, alpha = 0.8)
 )
 
 # =============================================================================
@@ -423,8 +476,8 @@ header_astro <- make_section_header("Astrocytes (ENCODE Mint-ChIP)")
 cat("Combining tracks...\n")
 
 panel_E <- plot_grid(
-  # --- PIP tracks (3) ---
-  track_susie, track_ash, track_inf,
+  # --- PIP tracks (2) ---
+  track_susie, track_inf,
   # --- Gene track (1) ---
   track_genes,
   # --- Bulk DLPFC (1) ---
@@ -438,8 +491,8 @@ panel_E <- plot_grid(
   track_ct_astro_dnase, track_ct_astro_h3k4me1, track_ct_astro_h3k4me3,
   ncol = 1, align = "v", axis = "lr",
   rel_heights = c(
-    # PIP tracks (3)
-    0.7, 0.7, 0.7,
+    # PIP tracks (2) -- taller now that they carry the callout gutter
+    1.1, 1.1,
     # Gene track
     0.4,
     # Bulk header + 1 track
@@ -458,12 +511,19 @@ panel_E <- plot_grid(
 # Save
 # =============================================================================
 
+# Save at the geometry this panel actually occupies in Figure 2 (full-width
+# row 2, ~18 x 10 in). Rendering the standalone at 6 in wide made the callout
+# text look ~3x larger than it does in the figure, which is misleading when
+# tuning LABEL_SIZE.
+STANDALONE_W <- 18
+STANDALONE_H <- 10.1
+
 output_pdf <- file.path(script_dir, "panel_E.pdf")
-ggsave(output_pdf, panel_E, width = 6, height = 13, units = "in", bg = "white")
+ggsave(output_pdf, panel_E, width = STANDALONE_W, height = STANDALONE_H, units = "in", bg = "white")
 cat(sprintf("Saved: %s\n", output_pdf))
 
 output_png <- file.path(script_dir, "panel_E.png")
-ggsave(output_png, panel_E, width = 6, height = 13, units = "in",
+ggsave(output_png, panel_E, width = STANDALONE_W, height = STANDALONE_H, units = "in",
        dpi = 300, bg = "white")
 cat(sprintf("Saved: %s\n", output_png))
 

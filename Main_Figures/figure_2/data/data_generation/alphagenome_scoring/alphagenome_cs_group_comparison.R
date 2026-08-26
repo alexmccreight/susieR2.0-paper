@@ -9,32 +9,73 @@
 #   - alphagenome_cs_scores.csv                    (from Step 2, alphagenome_cs_scoring.py)
 #
 # Pipeline:
-#   1. Load 95% credible sets across the 3 methods, restrict to gene-tissue
-#      pairs common to all 3.
+#   1. Restrict to gene-tissue pairs common to all PAIR_METHODS (always all
+#      three), then load 95% credible sets for CS_METHODS only.
 #   2. Match cross-method CSs by Jaccard >= 0.75 over their variant sets;
 #      assign every CS a signal_id via union-find on the resulting graph.
-#   3. Classify each signal into one of 7 cross-method groups:
-#        Consensus           Standard + ASH + Inf
-#        Standard-specific   Standard only
-#        ASH-specific        ASH only
-#        Inf-specific        Inf only
-#        Standard+ASH        Standard + ASH (no Inf)
-#        Standard+Inf        Standard + Inf (no ASH)
-#        ASH+Inf             ASH + Inf (no Standard)
+#   3. Classify each signal by which of CS_METHODS it contains.
+#        CS_METHODS = standard, ash, inf  ->  7 groups (Consensus,
+#          Standard-specific, ASH-specific, Inf-specific, Standard+ASH,
+#          Standard+Inf, ASH+Inf)
+#        CS_METHODS = standard, inf       ->  3 groups (Consensus,
+#          Standard-specific, Inf-specific)   [main Figure 2]
 #   4. Merge AlphaGenome CS-level scores with the group labels.
 #   5. Compare score distributions (overall, per modality, per tissue) and
 #      run Wilcoxon rank-sum tests of Consensus vs each other group.
 #
-# Outputs:
-#   alphagenome_cs_group_assignments.rds   (Figure 2 panels B & D input)
-#   alphagenome_cs_group_scores.csv        (Figure 2 panel D input)
-#   alphagenome_cs_group_summary.txt       (text summary; not a figure input)
+# Outputs (suffixed with __<methods> unless this is the full 3-method run, so
+# the original three-method products are preserved for Supplementary S11):
+#   alphagenome_cs_group_assignments[__std_inf].rds   (Fig 2 panels B & D input)
+#   alphagenome_cs_group_scores[__std_inf].csv        (Fig 2 panel D input)
+#   alphagenome_cs_group_summary[__std_inf].txt       (text summary)
 #
-# Usage: Rscript alphagenome_cs_group_comparison.R
+# Usage:
+#   Rscript Main_Figures/.../alphagenome_cs_group_comparison.R              # standard,inf (main Fig 2)
+#   Rscript Main_Figures/.../alphagenome_cs_group_comparison.R standard,ash,inf   # 3-method (S11)
+# Run from the repository root.
 # =============================================================================
 
-data_dir   <- "/Users/alexmccreight/StatFunGen/susieR2.0-benchmark/alphagenome/data"
-output_dir <- "/Users/alexmccreight/StatFunGen/susieR2.0-benchmark"
+source("R/paths.R")
+
+fig2_dir   <- fig_dir(2)
+data_dir   <- file.path(fig2_dir, "data", "panel_A")   # per-method CS + summaries
+output_dir <- file.path(fig2_dir, "data")
+
+# =============================================================================
+# Method configuration
+# =============================================================================
+# PAIR_METHODS defines the analysed universe: only gene-tissue pairs in which
+# EVERY one of these methods produced a result are considered. It is held at all
+# three methods so that main Figure 2 and Supplementary S11 share an identical
+# denominator (7,941 pairs) and differ only in which methods contribute CSs.
+#
+# CS_METHODS defines which methods actually contribute credible sets to the
+# Jaccard matching. A method removed here is removed BEFORE the union-find,
+# which is the point: an ash CS can otherwise bridge a SuSiE CS and a SuSiE-inf
+# CS into one connected component. Filtering after the fact would silently keep
+# those merges and overstate agreement.
+PAIR_METHODS <- c("standard", "ash", "inf")
+CS_METHODS   <- c("standard", "inf")
+
+# Override from the command line, e.g. to reproduce the three-method original:
+#   Rscript ... alphagenome_cs_group_comparison.R standard,ash,inf
+.cli <- commandArgs(trailingOnly = TRUE)
+if (length(.cli) > 0 && nzchar(.cli[1])) {
+  CS_METHODS <- trimws(strsplit(.cli[1], ",")[[1]])
+}
+stopifnot(all(CS_METHODS %in% PAIR_METHODS), length(CS_METHODS) >= 2)
+
+# Outputs are suffixed unless this is the full three-method run, so the
+# original three-method products are never overwritten.
+OUT_SUFFIX <- if (setequal(CS_METHODS, PAIR_METHODS)) "" else
+  paste0("__", paste(CS_METHODS, collapse = "_"))
+
+# Display names used to build group labels.
+GROUP_LABEL <- c(standard = "Standard", ash = "ASH", inf = "Inf")
+
+cat("CS methods :", paste(CS_METHODS, collapse = ", "), "\n")
+cat("Pair universe:", paste(PAIR_METHODS, collapse = ", "), "\n")
+cat("Output suffix:", if (nzchar(OUT_SUFFIX)) OUT_SUFFIX else "(none)", "\n")
 
 # =============================================================================
 # Step 1: Load data and build variant sets per CS
@@ -44,15 +85,16 @@ cat("STEP 1: Loading data and building variant sets\n")
 cat("============================================================\n")
 
 # Load summaries to find common gene-tissue pairs
-std_summary <- readRDS(file.path(data_dir, "susie_standard_gene_tissue_summary.rds"))
-ash_summary <- readRDS(file.path(data_dir, "susie_ash_gene_tissue_summary.rds"))
-inf_summary <- readRDS(file.path(data_dir, "susie_inf_gene_tissue_summary.rds"))
-
-std_pairs <- paste(std_summary$gene_id, std_summary$tissue, sep = ":")
-ash_pairs <- paste(ash_summary$gene_id, ash_summary$tissue, sep = ":")
-inf_pairs <- paste(inf_summary$gene_id, inf_summary$tissue, sep = ":")
-common_pairs <- Reduce(intersect, list(std_pairs, ash_pairs, inf_pairs))
-cat("Common gene-tissue pairs:", length(common_pairs), "\n")
+# The universe is fixed by PAIR_METHODS (all three), NOT by CS_METHODS.
+pair_sets <- lapply(PAIR_METHODS, function(m) {
+  s <- readRDS(file.path(data_dir, paste0("susie_", m, "_gene_tissue_summary.rds")))
+  paste(s$gene_id, s$tissue, sep = ":")
+})
+names(pair_sets) <- PAIR_METHODS
+for (m in PAIR_METHODS) cat(sprintf("  %s: %d gene-tissue pairs\n", m, length(pair_sets[[m]])))
+common_pairs <- Reduce(intersect, pair_sets)
+cat("Common gene-tissue pairs (all of",
+    paste(PAIR_METHODS, collapse = ", "), "):", length(common_pairs), "\n")
 
 # Load 95% credible sets for all 3 methods
 load_cs95 <- function(method_name) {
@@ -68,18 +110,15 @@ load_cs95 <- function(method_name) {
   cs
 }
 
-std_cs <- load_cs95("standard")
-ash_cs <- load_cs95("ash")
-inf_cs <- load_cs95("inf")
+KEEP_COLS <- c("gene_id", "tissue", "cs_id", "method", "pair",
+               "n_variants", "top_variant", "top_pip", "variant_set")
 
-all_cs <- rbind(
-  std_cs[, c("gene_id", "tissue", "cs_id", "method", "pair",
-             "n_variants", "top_variant", "top_pip", "variant_set")],
-  ash_cs[, c("gene_id", "tissue", "cs_id", "method", "pair",
-             "n_variants", "top_variant", "top_pip", "variant_set")],
-  inf_cs[, c("gene_id", "tissue", "cs_id", "method", "pair",
-             "n_variants", "top_variant", "top_pip", "variant_set")]
-)
+# Only CS_METHODS enter the matching frame; a method excluded here never gets
+# the chance to bridge two others in the union-find below.
+cs_list <- lapply(CS_METHODS, function(m) load_cs95(m)[, KEEP_COLS])
+names(cs_list) <- CS_METHODS
+cs_counts <- vapply(cs_list, nrow, integer(1))
+all_cs <- do.call(rbind, cs_list)
 cat(sprintf("\nTotal CS across all methods: %d\n", nrow(all_cs)))
 
 # =============================================================================
@@ -199,19 +238,16 @@ signal_methods <- tapply(signals$method, signals$signal_id, function(m) {
   sort(unique(m))
 })
 
+# Generic over CS_METHODS. For the three-method run this reproduces the original
+# seven labels exactly (Consensus / Standard-specific / ASH-specific /
+# Inf-specific / Standard+ASH / Standard+Inf / ASH+Inf). For the two-method run
+# it yields three: Consensus / Standard-specific / Inf-specific.
 classify_group <- function(methods) {
-  has_std <- "standard" %in% methods
-  has_ash <- "ash" %in% methods
-  has_inf <- "inf" %in% methods
-
-  if (has_std && has_ash && has_inf) return("Consensus")
-  if (has_std && !has_ash && !has_inf) return("Standard-specific")
-  if (!has_std && has_ash && !has_inf) return("ASH-specific")
-  if (!has_std && !has_ash && has_inf) return("Inf-specific")
-  if (has_std && has_ash && !has_inf) return("Standard+ASH")
-  if (has_std && !has_ash && has_inf) return("Standard+Inf")
-  if (!has_std && has_ash && has_inf) return("ASH+Inf")
-  return("Unknown")
+  present <- CS_METHODS[CS_METHODS %in% methods]   # keeps CS_METHODS ordering
+  if (length(present) == 0) return("Unknown")
+  if (length(present) == length(CS_METHODS)) return("Consensus")
+  if (length(present) == 1) return(paste0(GROUP_LABEL[[present]], "-specific"))
+  paste(unname(GROUP_LABEL[present]), collapse = "+")
 }
 
 signal_groups <- sapply(signal_methods, classify_group)
@@ -239,7 +275,7 @@ for (g in names(sort(cs_group_counts, decreasing = TRUE))) {
 
 # Per-method breakdown
 cat("\n--- CS per method per group ---\n")
-for (m in c("standard", "ash", "inf")) {
+for (m in CS_METHODS) {
   cat(sprintf("\n  %s:\n", m))
   m_signals <- signals[signals$method == m, ]
   m_group_counts <- table(m_signals$group)
@@ -250,7 +286,7 @@ for (m in c("standard", "ash", "inf")) {
 }
 
 # Save group assignments
-assignments_file <- file.path(output_dir, "alphagenome_cs_group_assignments.rds")
+assignments_file <- file.path(output_dir, paste0("alphagenome_cs_group_assignments", OUT_SUFFIX, ".rds"))
 saveRDS(signals, assignments_file)
 cat(sprintf("\nSaved group assignments to %s\n", assignments_file))
 
@@ -276,11 +312,18 @@ cat(sprintf("Matched %d / %d CS score rows to groups\n", nrow(annotated), nrow(c
 # Check for unmatched
 unmatched <- nrow(cs_scores) - nrow(annotated)
 if (unmatched > 0) {
-  cat(sprintf("WARNING: %d CS score rows could not be matched (likely non-common pairs)\n", unmatched))
+  # Score rows for methods outside CS_METHODS are dropped here by design; only
+  # anything beyond that is worth flagging.
+  excluded <- sum(!cs_scores$method %in% CS_METHODS)
+  cat(sprintf("Dropped %d score rows for methods not in CS_METHODS (expected)\n", excluded))
+  if (unmatched > excluded) {
+    cat(sprintf("WARNING: a further %d CS score rows could not be matched\n",
+                unmatched - excluded))
+  }
 }
 
 # Save annotated scores
-annotated_file <- file.path(output_dir, "alphagenome_cs_group_scores.csv")
+annotated_file <- file.path(output_dir, paste0("alphagenome_cs_group_scores", OUT_SUFFIX, ".csv"))
 write.csv(annotated, annotated_file, row.names = FALSE)
 cat(sprintf("Saved annotated scores to %s\n", annotated_file))
 
@@ -393,11 +436,9 @@ for (tis in c("AC", "DLPFC", "PCC")) {
 
 # --- Verification ---
 lines <- c(lines, "\n\n--- Verification ---")
-for (m in c("standard", "ash", "inf")) {
+for (m in CS_METHODS) {
   m_assigned <- sum(signals$method == m)
-  if (m == "standard") m_expected <- nrow(std_cs)
-  else if (m == "ash") m_expected <- nrow(ash_cs)
-  else m_expected <- nrow(inf_cs)
+  m_expected <- cs_counts[[m]]
   status <- if (m_assigned == m_expected) "OK" else "MISMATCH"
   lines <- c(lines, sprintf("  %s: %d assigned, %d expected — %s",
                              m, m_assigned, m_expected, status))
@@ -406,7 +447,7 @@ for (m in c("standard", "ash", "inf")) {
 text <- paste(lines, collapse = "\n")
 cat(text)
 
-summary_file <- file.path(output_dir, "alphagenome_cs_group_summary.txt")
+summary_file <- file.path(output_dir, paste0("alphagenome_cs_group_summary", OUT_SUFFIX, ".txt"))
 writeLines(text, summary_file)
 cat(sprintf("\n\nSaved summary to %s\n", summary_file))
 

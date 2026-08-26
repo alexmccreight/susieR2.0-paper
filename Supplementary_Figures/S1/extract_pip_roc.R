@@ -11,8 +11,10 @@
 # Output: data/pip_roc_data.rds  (list with $curves and $auroc)
 # =============================================================================
 
-s1_dir     <- "/Users/alexmccreight/StatFunGen/susieR2.0-benchmark/final_scripts/supplemental/S1"
-data_dir   <- "/Users/alexmccreight/StatFunGen/susieR2.0-benchmark/final_scripts/500_rep_results/sparse"
+source("R/paths.R")
+
+s1_dir     <- supp_dir(1)
+data_dir   <- file.path(benchmark_root(), "final_scripts", "500_rep_results", "sparse")
 output_dir <- file.path(s1_dir, "data")
 
 K_values <- 1:5

@@ -21,7 +21,9 @@ suppressMessages({
 # Paths
 # =============================================================================
 
-s5_dir   <- "/Users/alexmccreight/StatFunGen/susieR2.0-paper/Supplementary_Figures/S5"
+source("R/paths.R")
+
+s5_dir   <- supp_dir(5)
 data_dir <- file.path(s5_dir, "data")
 data_path <- file.path(data_dir, "s5_cs_data.rds")
 

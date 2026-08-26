@@ -22,7 +22,9 @@ suppressMessages({
 # Paths
 # =============================================================================
 
-s4_dir   <- "/Users/alexmccreight/StatFunGen/susieR2.0-benchmark/final_scripts/supplemental/S4"
+source("R/paths.R")
+
+s4_dir   <- supp_dir(4)
 data_dir <- file.path(s4_dir, "data")
 data_path <- file.path(data_dir, "s4_metrics.rds")
 

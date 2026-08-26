@@ -49,8 +49,10 @@ suppressMessages({
 # Paths
 # =============================================================================
 
-s4_dir          <- "/Users/alexmccreight/StatFunGen/susieR2.0-benchmark/final_scripts/supplemental/S4"
-rep_results_dir <- "/Users/alexmccreight/StatFunGen/susieR2.0-benchmark/final_scripts/500_rep_results"
+source("R/paths.R")
+
+s4_dir          <- supp_dir(4)
+rep_results_dir <- file.path(benchmark_root(), "final_scripts", "500_rep_results")
 
 # Raw inputs live under final_scripts/500_rep_results/ (not user-facing in S4/).
 sim_dir        <- file.path(rep_results_dir, "sparse")    # raw SuSiE-fit sim files

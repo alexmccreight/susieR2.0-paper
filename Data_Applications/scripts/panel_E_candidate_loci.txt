@@ -1,0 +1,6 @@
+ROSMAP_DeJager_eQTL_twas.chr11_ENSG00000049449.univariate_bvsr.rds (original)
+ROSMAP_DeJager_eQTL_twas.chr1_ENSG00000163431.univariate_bvsr.rds (new)
+ROSMAP_DeJager_eQTL_twas.chr10_ENSG00000176244.univariate_bvsr.rds (new)
+ROSMAP_DeJager_eQTL_twas.chr17_ENSG00000132470.univariate_bvsr.rds (new)
+ROSMAP_DeJager_eQTL_twas.chr10_ENSG00000170430.univariate_bvsr.rds (new)
+ROSMAP_DeJager_eQTL_twas.chr16_ENSG00000140740.univariate_bvsr.rds (new)

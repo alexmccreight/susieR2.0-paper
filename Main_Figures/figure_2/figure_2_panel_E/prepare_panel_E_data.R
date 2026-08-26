@@ -3,18 +3,19 @@
 # =============================================================================
 # Figure 2, Panel E — Data Preparation
 # =============================================================================
-# Loads SuSiE fit objects for ENSG00000163431 (DLPFC tissue) from all three
-# methods (standard, ash, inf), extracts PIPs, variant positions, and
-# credible set membership, and saves a clean plotting-ready data frame.
+# Loads SuSiE fit objects for ENSG00000163431 (DLPFC tissue) for the main-figure
+# methods (standard, inf), extracts PIPs, variant positions, and credible set
+# membership, and saves a clean plotting-ready data frame.
 #
 # Gene:   ENSG00000163431 (chr1)
 # Tissue: DLPFC (dorsolateral prefrontal cortex)
-# Story:  SuSiE-ash finds a novel 6-variant CS at ~201.806 Mb (CS1, lead
-#         PIP 0.368) that standard and inf do not detect. All three methods
-#         share a signal at ~201.917 Mb. Standard also has a diffuse
-#         secondary CS2 spanning ~201.788-201.935 Mb.
+# Story:  SuSiE and SuSiE-inf share a signal at ~201.917 Mb. SuSiE additionally
+#         reports a diffuse secondary CS2 spanning ~201.788-201.935 Mb.
 #
-# Input:  STANDARD/ASH/INF fit RDS files (in this directory)
+# SuSiE-ash was removed from main Figure 2; the three-method version of this
+# panel is preserved in Supplementary Figure S11.
+#
+# Input:  STANDARD/INF fit RDS files (in this directory)
 # Output: panel_E_data.rds
 # =============================================================================
 
@@ -22,21 +23,23 @@
 # Paths
 # =============================================================================
 
-fig2_dir   <- "/Users/alexmccreight/StatFunGen/susieR2.0-benchmark/final_scripts/figure_2"
+source("R/paths.R")
+source("R/aesthetics.R")
+
+fig2_dir   <- fig_dir(2)
 script_dir <- file.path(fig2_dir, "figure_2_panel_E")
 data_dir   <- file.path(fig2_dir, "data", "panel_E")
 
 fit_files <- list(
   standard = file.path(data_dir, "STANDARD-ROSMAP_DeJager_eQTL_twas.chr1_ENSG00000163431.univariate_bvsr.rds"),
-  ash      = file.path(data_dir, "ASH-ROSMAP_DeJager_eQTL_twas.chr1_ENSG00000163431.univariate_bvsr.rds"),
   inf      = file.path(data_dir, "INF-ROSMAP_DeJager_eQTL_twas.chr1_ENSG00000163431.univariate_bvsr.rds")
 )
 
 gene_id    <- "ENSG00000163431"
 tissue_key <- "DLPFC_DeJager_eQTL_ENSG00000163431"
 
-method_labels <- c(standard = "SuSiE", ash = "SuSiE-ash", inf = "SuSiE-inf")
-method_order  <- c("SuSiE", "SuSiE-ash", "SuSiE-inf")
+method_labels <- c(standard = "SuSiE", inf = "SuSiE-inf")
+method_order  <- c("SuSiE", "SuSiE-inf")
 
 # =============================================================================
 # Extract data from each method

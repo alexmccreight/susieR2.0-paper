@@ -25,8 +25,12 @@
 # =============================================================================
 
 # ---- Paths ----
-ldext_root <- "/Users/alexmccreight/StatFunGen/susieR2.0-benchmark/final_scripts/500_rep_results"
-fig1_data  <- "/Users/alexmccreight/StatFunGen/susieR2.0-paper/Main_Figures/figure_1/data"
+source("R/paths.R")
+
+# Raw 500-replicate simulation output lives outside the repo (~22 GB).
+# Override its location with SUSIER2_BENCHMARK_ROOT if needed.
+ldext_root <- file.path(benchmark_root(), "final_scripts", "500_rep_results")
+fig1_data  <- file.path(fig_dir(1), "data")
 
 VERSION      <- "xcorr_ext"
 N_values     <- c(3, 5, 10, 15, 20, 25)

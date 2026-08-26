@@ -18,8 +18,10 @@
 # Output:              data/s8_finemapping_data.rds
 # =============================================================================
 
-ldext_root <- "/Users/alexmccreight/StatFunGen/susieR2.0-benchmark/final_scripts/500_rep_results"
-s8_dir     <- "/Users/alexmccreight/StatFunGen/susieR2.0-paper/Supplementary_Figures/S8"
+source("R/paths.R")
+
+ldext_root <- file.path(benchmark_root(), "final_scripts", "500_rep_results")
+s8_dir     <- supp_dir(8)
 output_dir <- file.path(s8_dir, "data")
 dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
 

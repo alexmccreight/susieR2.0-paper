@@ -17,7 +17,10 @@ library(dplyr)
 # Paths
 # =============================================================================
 
-fig1_dir   <- "/Users/alexmccreight/StatFunGen/susieR2.0-paper/Main_Figures/figure_1"
+source("R/paths.R")
+source("R/aesthetics.R")
+
+fig1_dir   <- fig_dir(1)
 script_dir <- file.path(fig1_dir, "figure_1_panel_F")
 data_path  <- file.path(fig1_dir, "data", "complex_S2_finemapping_summary.rds")
 
@@ -25,19 +28,7 @@ data_path  <- file.path(fig1_dir, "data", "complex_S2_finemapping_summary.rds")
 # Shared aesthetics
 # =============================================================================
 
-method_colors <- c(
-  "SuSiE"     = "#4A90E2",
-  "SuSiE-inf" = "#7CB342",
-  "SuSiE-ash" = "#E53935"
-)
-
-theme_panel <- theme_classic(base_size = 11) +
-  theme(
-    axis.title = element_text(face = "bold", size = 10),
-    axis.text = element_text(color = "black", size = 9),
-    legend.position = "none",
-    plot.margin = margin(5, 5, 5, 5)
-  )
+# method_colors, theme_panel and MAIN_METHODS come from R/aesthetics.R
 
 # =============================================================================
 # Load data
@@ -46,8 +37,12 @@ theme_panel <- theme_classic(base_size = 11) +
 cat("Loading complex fine-mapping summary...\n")
 if (!file.exists(data_path)) stop("Data file not found: ", data_path)
 complex_data <- readRDS(data_path)
+
+# Main figure shows SuSiE + SuSiE-inf only. The three-method version that
+# retains SuSiE-ash is Supplementary Figure S10.
+complex_data <- complex_data[complex_data$Method %in% MAIN_METHODS, ]
 complex_data$Method <- factor(complex_data$Method,
-                              levels = c("SuSiE", "SuSiE-ash", "SuSiE-inf"))
+                              levels = MAIN_METHODS)
 
 # =============================================================================
 # Create plot
@@ -75,7 +70,7 @@ panel_F <- ggplot(complex_data, aes(x = N_position, y = FDR_mean,
   ) +
   geom_point(size = 3.5) +
   geom_hline(yintercept = 0.05, linetype = "dotted", color = "red", linewidth = 0.8) +
-  scale_color_manual(values = method_colors, breaks = c("SuSiE", "SuSiE-ash", "SuSiE-inf")) +
+  scale_color_manual(values = method_colors, breaks = MAIN_METHODS) +
   scale_x_continuous(
     breaks = 1:6,
     labels = c("25", "20", "15", "10", "5", "3")

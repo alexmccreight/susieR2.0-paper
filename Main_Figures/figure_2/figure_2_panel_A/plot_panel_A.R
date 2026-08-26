@@ -15,18 +15,17 @@ library(ggplot2)
 # Paths
 # =============================================================================
 
-script_dir <- "/Users/alexmccreight/StatFunGen/susieR2.0-benchmark/final_scripts/figure_2/figure_2_panel_A"
+source("R/paths.R")
+source("R/aesthetics.R")
+
+script_dir <- file.path(fig_dir(2), "figure_2_panel_A")
 data_path  <- file.path(script_dir, "panel_A_data.rds")
 
 # =============================================================================
 # Shared aesthetics
 # =============================================================================
 
-method_colors <- c(
-  "SuSiE"     = "#4A90E2",
-  "SuSiE-ash" = "#E53935",
-  "SuSiE-inf" = "#7CB342"
-)
+# method_colors and MAIN_METHODS come from R/aesthetics.R
 
 size_bin_levels <- c("1", "2", "3-5", "6-10", ">10")
 
@@ -58,8 +57,7 @@ colnames(size_dist) <- c("method", "category", "count")
 # Combine
 grouped_df <- rbind(total_df[, c("method", "category", "count")],
                     size_dist[, c("method", "category", "count")])
-grouped_df$method <- factor(grouped_df$method,
-                            levels = c("SuSiE", "SuSiE-ash", "SuSiE-inf"))
+grouped_df$method <- factor(grouped_df$method, levels = MAIN_METHODS)
 grouped_df$category <- factor(grouped_df$category,
                               levels = c("Total", size_bin_levels))
 

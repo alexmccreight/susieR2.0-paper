@@ -22,9 +22,10 @@ cat("Creating Figure 1: SuSiE 2.0 Overview & Simulation Benchmarks...\n\n")
 # PATHS
 # =============================================================================
 
-base_dir <- "/Users/alexmccreight/StatFunGen/susieR2.0-paper"
-fig1_dir <- file.path(base_dir, "Main_Figures/figure_1")
-output_dir <- file.path(base_dir, "Main_Figures/figure_1")
+source("R/paths.R")
+
+fig1_dir   <- fig_dir(1)
+output_dir <- fig1_dir
 
 # =============================================================================
 # LOAD PANEL PLOT OBJECTS
@@ -66,10 +67,15 @@ panel_F <- readRDS(file.path(fig1_dir, "figure_1_panel_F", "panel_F_plot.rds"))
 cat("  Panel F loaded (Complex S2 FDR).\n")
 
 # ── Increase font sizes for all ggplot panels ──
+# Note: legend.text/key.size are bumped here too so Panel B's legend (the only
+# panel with a visible legend) scales with the enlarged axis fonts in the
+# composite, rather than staying stranded at its small standalone size.
 bigger_theme <- theme(
-  axis.title = element_text(face = "bold", size = 18),
-  axis.text  = element_text(color = "black", size = 15),
-  strip.text = element_text(size = 16, face = "bold")
+  axis.title  = element_text(face = "bold", size = 18),
+  axis.text   = element_text(color = "black", size = 15),
+  strip.text  = element_text(size = 16, face = "bold"),
+  legend.text = element_text(size = 15),
+  legend.key.size = unit(0.6, "cm")
 )
 for (p_name in c("panel_B", "panel_C", "panel_D", "panel_E", "panel_F")) {
   p <- get(p_name)

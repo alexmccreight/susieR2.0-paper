@@ -23,7 +23,10 @@ suppressPackageStartupMessages({
 # Paths
 # =============================================================================
 
-fig1_dir    <- "/Users/alexmccreight/StatFunGen/susieR2.0-paper/Main_Figures/figure_1"
+source("R/paths.R")
+source("R/aesthetics.R")
+
+fig1_dir    <- fig_dir(1)
 script_dir  <- file.path(fig1_dir, "figure_1_panel_B")
 results_dir <- file.path(fig1_dir, "data", "panel_B", "susie_inf_comparison_data")
 
@@ -87,9 +90,9 @@ p_fold <- ggplot(df_fold, aes(x = pn_label, y = fold, fill = method)) +
   theme(
     axis.title = element_text(face = "bold", size = 10),
     axis.text  = element_text(color = "black", size = 9),
-    legend.position = c(0.5, 0.97),
-    legend.justification = c(0.5, 1),
-    legend.direction = "horizontal",
+    legend.position = c(0.02, 0.98),
+    legend.justification = c(0, 1),
+    legend.direction = "vertical",
     legend.text = element_text(size = 8),
     legend.key.size = unit(0.35, "cm"),
     legend.background = element_rect(fill = alpha("white", 0.85), color = NA),

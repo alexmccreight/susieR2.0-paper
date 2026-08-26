@@ -3,10 +3,14 @@
 # =============================================================================
 # Figure 2, Panel A — Data Preparation
 # =============================================================================
-# Loads ROSMAP eQTL fine-mapping results for SuSiE, SuSiE-ash, and SuSiE-inf,
-# restricts to gene-tissue pairs common across all three methods, filters to
-# 95% coverage credible sets, and outputs a combined long-format data frame
-# for plotting.
+# Loads ROSMAP eQTL fine-mapping results, restricts to gene-tissue pairs common
+# across all three methods, filters to 95% coverage credible sets, and outputs a
+# combined long-format data frame for plotting.
+#
+# The gene-tissue universe is still defined by ALL three methods, so that main
+# Figure 2 and Supplementary S11 share an identical denominator. Only the
+# main-figure methods (MAIN_METHODS: SuSiE, SuSiE-inf) contribute credible sets;
+# the three-method version is Supplementary Figure S11.
 #
 # Input:  {method}_credible_sets.rds, {method}_gene_tissue_summary.rds
 # Output: panel_A_data.rds
@@ -16,7 +20,10 @@
 # Paths
 # =============================================================================
 
-fig2_dir   <- "/Users/alexmccreight/StatFunGen/susieR2.0-benchmark/final_scripts/figure_2"
+source("R/paths.R")
+source("R/aesthetics.R")
+
+fig2_dir   <- fig_dir(2)
 data_dir   <- file.path(fig2_dir, "data", "panel_A")
 output_dir <- file.path(fig2_dir, "figure_2_panel_A")
 
@@ -38,8 +45,9 @@ cs_files <- c(
   `SuSiE-inf` = "susie_inf_credible_sets.rds"
 )
 
+# All three summaries define the universe; only MAIN_METHODS contribute CSs.
 summaries <- lapply(summary_files, function(f) readRDS(file.path(data_dir, f)))
-cs_list   <- lapply(cs_files,      function(f) readRDS(file.path(data_dir, f)))
+cs_list   <- lapply(cs_files[MAIN_METHODS], function(f) readRDS(file.path(data_dir, f)))
 
 # =============================================================================
 # Identify common gene x tissue pairs across all three methods
@@ -88,8 +96,7 @@ cs_combined$cs_size_bin <- cut(
 )
 
 # Set method factor levels for consistent ordering
-cs_combined$method <- factor(cs_combined$method,
-                             levels = c("SuSiE", "SuSiE-ash", "SuSiE-inf"))
+cs_combined$method <- factor(cs_combined$method, levels = MAIN_METHODS)
 
 # =============================================================================
 # Verification summary

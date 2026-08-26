@@ -19,7 +19,9 @@ library(jsonlite)
 # Configuration
 # =============================================================================
 
-script_dir <- "/Users/alexmccreight/StatFunGen/susieR2.0-benchmark/final_scripts/figure_2/figure_2_panel_E"
+source("R/paths.R")
+
+script_dir <- file.path(fig_dir(2), "figure_2_panel_E")
 
 # Zoom region (bp)
 chrom      <- "1"

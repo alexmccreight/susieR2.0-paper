@@ -15,7 +15,10 @@
 # Paths
 # =============================================================================
 
-fig2_dir   <- "/Users/alexmccreight/StatFunGen/susieR2.0-benchmark/final_scripts/figure_2"
+source("R/paths.R")
+source("R/aesthetics.R")
+
+fig2_dir   <- fig_dir(2)
 script_dir <- file.path(fig2_dir, "figure_2_panel_C")
 input_file <- file.path(fig2_dir, "data", "twas_cv_all_metrics_combined.rds")
 output_file <- file.path(script_dir, "panel_C_data.rds")
@@ -30,7 +33,8 @@ cat(sprintf("  %d rows, %d methods, %d tissues\n",
             nrow(d), length(unique(d$method)), length(unique(d$tissue))))
 
 # =============================================================================
-# Filter to 6 methods (exclude susie_ash, susie_inf)
+# Filter to the 6 methods of interest (excludes susie_ash and mr_ash;
+# susie_inf IS retained)
 # =============================================================================
 
 keep_methods <- c("susie", "susie_inf", "enet", "lasso", "bayes_r", "bayes_l")

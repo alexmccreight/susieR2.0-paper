@@ -1,3 +1,5 @@
-jupyter-book
-matplotlib
-numpy
+# Jupyter Book 2.x is a ground-up rewrite with a different CLI and config format
+# (myst.yml); the _config.yml / _toc.yml pair and the `build --config --toc`
+# invocation in .github/workflows/deploy-book.yml are the 1.x interface.
+# Pin to 1.x so an unpinned install cannot silently break the deploy.
+jupyter-book>=1.0,<2

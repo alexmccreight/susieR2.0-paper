@@ -22,7 +22,9 @@ library(tidyr)
 # Paths
 # =============================================================================
 
-s6_dir   <- "/Users/alexmccreight/StatFunGen/susieR2.0-paper/Supplementary_Figures/S6"
+source("R/paths.R")
+
+s6_dir   <- supp_dir(6)
 data_dir <- file.path(s6_dir, "data", "rss_lambda_comparison_data")
 
 # =============================================================================

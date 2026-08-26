@@ -1,7 +1,12 @@
 # AlphaGenome Scoring Pipeline
 
 End-to-end pipeline that produces the AlphaGenome-derived inputs to Figure 2
-panels B (UpSet) and D (functional enrichment):
+the cross-method concordance panel and the AlphaGenome enrichment panel.
+(Those are labelled **C** and **D** in main Figure 2, and **B** and **D** in
+Supplementary Figure S11, which keeps the original panel order. The source
+directories are named `figure_2_panel_B` and `figure_2_panel_D` throughout.)
+
+Outputs:
 
 - `data/alphagenome_cs_group_assignments.rds`
 - `data/alphagenome_cs_group_scores.csv`
@@ -35,8 +40,8 @@ downstream alphagenome step.
 3. alphagenome_cs_group_comparison.R   (Jaccard ≥ 0.75 cross-method
                                         classification + score merge)
         │
-        ├──> data/alphagenome_cs_group_assignments.rds   ← Fig 2 panels B, D
-        └──> data/alphagenome_cs_group_scores.csv        ← Fig 2 panel D
+        ├──> data/alphagenome_cs_group_assignments.rds   ← concordance + enrichment panels
+        └──> data/alphagenome_cs_group_scores.csv        ← enrichment panel (D)
 ```
 
 ## Step 1 — `extract_bvsr_results.R`

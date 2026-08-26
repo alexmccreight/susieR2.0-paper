@@ -22,7 +22,9 @@ library(cowplot)
 # PATHS
 # =============================================================================
 
-s1_dir   <- "/Users/alexmccreight/StatFunGen/susieR2.0-paper/Supplementary_Figures/S1"
+source("R/paths.R")
+
+s1_dir   <- supp_dir(1)
 data_dir <- file.path(s1_dir, "data")
 
 bar_data_file <- file.path(data_dir, "finemapping_data.rds")

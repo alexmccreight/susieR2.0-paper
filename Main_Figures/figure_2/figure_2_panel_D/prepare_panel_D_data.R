@@ -9,8 +9,13 @@
 # renames groups for display, computes per-group-per-modality summary
 # statistics and one-sided t-tests (mean > 0.5), and saves for plotting.
 #
-# Input:  alphagenome_cs_group_scores.csv
-#         alphagenome_cs_group_assignments.rds
+# Method-agnostic: groups are taken from whatever the input files contain, so
+# the same script serves main Figure 2 (SuSiE + SuSiE-inf) and Supplementary
+# S11 (all three methods). Pass alternative input files as command-line
+# arguments 1 and 2, and an alternative output as argument 3.
+#
+# Input:  alphagenome_cs_group_scores__standard_inf.csv
+#         alphagenome_cs_group_assignments__standard_inf.rds
 # Output: panel_D_data.rds
 # =============================================================================
 
@@ -18,11 +23,18 @@
 # Paths
 # =============================================================================
 
-fig2_dir   <- "/Users/alexmccreight/StatFunGen/susieR2.0-benchmark/final_scripts/figure_2"
+source("R/paths.R")
+source("R/aesthetics.R")
+
+fig2_dir   <- fig_dir(2)
 script_dir <- file.path(fig2_dir, "figure_2_panel_D")
 data_dir   <- file.path(fig2_dir, "data")
-scores_file      <- file.path(data_dir, "alphagenome_cs_group_scores.csv")
-assignments_file <- file.path(data_dir, "alphagenome_cs_group_assignments.rds")
+.cli <- commandArgs(trailingOnly = TRUE)
+.arg <- function(i, default) if (length(.cli) >= i && nzchar(.cli[i])) .cli[i] else default
+
+scores_file      <- .arg(1, file.path(data_dir, "alphagenome_cs_group_scores__standard_inf.csv"))
+assignments_file <- .arg(2, file.path(data_dir, "alphagenome_cs_group_assignments__standard_inf.rds"))
+output_path      <- .arg(3, file.path(script_dir, "panel_D_data.rds"))
 
 # =============================================================================
 # Load data
@@ -70,22 +82,14 @@ d$modality <- ifelse(d$modality == "RNA_SEQ", "RNA-seq", "DNase")
 # Rename groups for display (match Panel B labels)
 # =============================================================================
 
-group_labels <- c(
-  "Consensus"          = "Consensus",
-  "Standard+ASH"       = "SuSiE + ASH",
-  "Standard+Inf"       = "SuSiE + INF",
-  "ASH+Inf"            = "ASH + INF",
-  "Standard-specific"  = "SuSiE only",
-  "ASH-specific"       = "ASH only",
-  "Inf-specific"       = "INF only"
-)
+# GROUP_DISPLAY (R/aesthetics.R) maps internal labels to the display labels used
+# by Panel B, and its order is the canonical plotting order.
+unknown <- setdiff(unique(d$group), names(GROUP_DISPLAY))
+if (length(unknown)) stop("Unrecognised group label(s): ", paste(unknown, collapse = ", "))
 
-d$group <- group_labels[d$group]
-
-# Order groups to match Panel B (descending by n_signals)
-group_order <- c("Consensus", "SuSiE + ASH", "SuSiE + INF", "ASH + INF",
-                 "SuSiE only", "ASH only", "INF only")
-d$group <- factor(d$group, levels = group_order)
+group_order <- unname(GROUP_DISPLAY[names(GROUP_DISPLAY) %in% unique(d$group)])
+d$group     <- factor(unname(GROUP_DISPLAY[d$group]), levels = group_order)
+cat(sprintf("  Groups present: %s\n", paste(group_order, collapse = ", ")))
 
 # =============================================================================
 # Compute per-group-per-modality summary statistics
@@ -166,6 +170,5 @@ output <- list(
   summary = summary_df
 )
 
-output_path <- file.path(script_dir, "panel_D_data.rds")
 saveRDS(output, output_path)
 cat(sprintf("\nSaved: %s\n", output_path))

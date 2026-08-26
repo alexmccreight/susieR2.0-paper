@@ -16,20 +16,22 @@ library(ggplot2)
 # Paths
 # =============================================================================
 
-script_dir <- "/Users/alexmccreight/StatFunGen/susieR2.0-benchmark/final_scripts/figure_2/figure_2_panel_C"
+source("R/paths.R")
+source("R/aesthetics.R")
+
+script_dir <- file.path(fig_dir(2), "figure_2_panel_C")
 data_path  <- file.path(script_dir, "panel_C_data.rds")
 
 # =============================================================================
 # Shared aesthetics
 # =============================================================================
 
+# SuSiE and SuSiE-inf take their colours from the shared palette in
+# R/aesthetics.R so they cannot drift from panels A, B, D and E. The remaining
+# prediction methods are specific to this panel.
 method_colors <- c(
-  "SuSiE"          = "#4A90E2",   # Matches Panel A
-  "SuSiE-inf"      = "#9C27B0",
-  "Elastic Net"    = "#FF9800",
-  "LASSO"          = "#D81B60",
-  "BayesR"         = "#2E9D8F",
-  "BayesL"         = "#78909C"
+  method_colors[MAIN_METHODS],   # SuSiE = #4A90E2, SuSiE-inf = #7CB342
+  prediction_colors              # Elastic Net, LASSO, BayesR, BayesL
 )
 
 # =============================================================================
@@ -66,8 +68,8 @@ panel_C <- ggplot(mean_df, aes(x = method, y = mean_rsq, color = method)) +
   theme_classic(base_size = 20) +
   theme(
     axis.title.y  = element_text(face = "bold", size = 20),
-    axis.text.x   = element_text(color = "black", size = 18, angle = 30,
-                                 hjust = 1),
+    axis.text.x   = element_text(color = "black", size = 17, angle = 45,
+                                 hjust = 1, face = "bold"),
     axis.text.y   = element_text(color = "black", size = 18),
     legend.position = "none",
     plot.margin   = margin(10, 10, 5, 5)

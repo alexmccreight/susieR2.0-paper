@@ -13,9 +13,11 @@
 #   - fit_susie_bb.rds       (SuSiE+BB, L = 10, slot_prior_betabinom())
 # =============================================================================
 
-pkgload::load_all("/Users/alexmccreight/StatFunGen/susieR", quiet = TRUE)
+source("R/paths.R")
 
-s2_dir     <- "/Users/alexmccreight/StatFunGen/susieR2.0-benchmark/final_scripts/supplemental/S2"
+pkgload::load_all(susier_root(), quiet = TRUE)
+
+s2_dir     <- supp_dir(2)
 output_dir <- file.path(s2_dir, "data")
 dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
 

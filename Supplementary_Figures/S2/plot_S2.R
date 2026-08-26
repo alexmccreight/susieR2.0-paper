@@ -14,7 +14,9 @@
 library(ggplot2)
 library(cowplot)
 
-script_dir <- "/Users/alexmccreight/StatFunGen/susieR2.0-benchmark/final_scripts/supplemental/S2"
+source("R/paths.R")
+
+script_dir <- supp_dir(2)
 data_dir   <- file.path(script_dir, "data")
 
 cat("Creating supplementary figure S2: unmappable effects example...\n")

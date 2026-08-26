@@ -28,8 +28,10 @@
 # Paths
 # =============================================================================
 
-s5_dir          <- "/Users/alexmccreight/StatFunGen/susieR2.0-paper/Supplementary_Figures/S5"
-rep_results_dir <- "/Users/alexmccreight/StatFunGen/susieR2.0-benchmark/final_scripts/500_rep_results"
+source("R/paths.R")
+
+s5_dir          <- supp_dir(5)
+rep_results_dir <- file.path(benchmark_root(), "final_scripts", "500_rep_results")
 
 output_dir <- file.path(s5_dir, "data")
 dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)

@@ -20,22 +20,17 @@ library(grid)
 # Paths
 # =============================================================================
 
-script_dir <- "/Users/alexmccreight/StatFunGen/susieR2.0-benchmark/final_scripts/figure_2/figure_2_panel_D"
+source("R/paths.R")
+source("R/aesthetics.R")
+
+script_dir <- file.path(fig_dir(2), "figure_2_panel_D")
 data_path  <- file.path(script_dir, "panel_D_data.rds")
 
 # =============================================================================
 # Shared aesthetics (match Panel B concordance colors)
 # =============================================================================
 
-concordance_colors <- c(
-  "Consensus"   = "#888888",
-  "SuSiE&ash"   = "#9C27B0",
-  "SuSiE&inf"   = "#2E9D8F",
-  "ash&inf"     = "#FF9800",
-  "SuSiE"       = "#4A90E2",
-  "SuSiE-ash"   = "#E53935",
-  "SuSiE-inf"   = "#7CB342"
-)
+# concordance_colors comes from R/aesthetics.R.
 
 modality_shapes <- c("RNA-seq" = 16, "DNase" = 17)  # circle, triangle
 
@@ -51,21 +46,7 @@ summary_df <- panel_data$summary
 summary_df$modality <- factor(summary_df$modality, levels = c("RNA-seq", "DNase"))
 panel_data$scores$modality <- factor(panel_data$scores$modality, levels = c("RNA-seq", "DNase"))
 
-# Remap group names for consistent method-name capitalization
-rename_groups <- c(
-  "SuSiE + ASH" = "SuSiE&ash",
-  "SuSiE + INF" = "SuSiE&inf",
-  "ASH + INF"   = "ash&inf",
-  "SuSiE only"  = "SuSiE",
-  "ASH only"    = "SuSiE-ash",
-  "INF only"    = "SuSiE-inf"
-)
-levels(summary_df$group) <- ifelse(levels(summary_df$group) %in% names(rename_groups),
-                                   rename_groups[levels(summary_df$group)],
-                                   levels(summary_df$group))
-levels(panel_data$scores$group) <- ifelse(levels(panel_data$scores$group) %in% names(rename_groups),
-                                          rename_groups[levels(panel_data$scores$group)],
-                                          levels(panel_data$scores$group))
+# Group labels already arrive in display form from prepare_panel_D_data.R.
 
 # =============================================================================
 # Build dot plot
@@ -73,8 +54,11 @@ levels(panel_data$scores$group) <- ifelse(levels(panel_data$scores$group) %in% n
 
 cat("Creating dot plot...\n")
 
-# Dodge width for separating RNA-seq and DNase within each group
-dodge_w <- 0.4
+# Grouped by MODALITY on the x-axis, with the concordance groups dodged inside
+# each one (Consensus, SuSiE, SuSiE-inf). This puts the two modalities side by
+# side for direct comparison and leaves only two x ticks instead of three.
+# Wider dodge than before because three points now share each x position.
+dodge_w <- 0.75
 
 # Position for significance stars (above upper error bar)
 summary_df$star_y <- summary_df$mean + summary_df$se + 0.012
@@ -82,8 +66,8 @@ summary_df$star_y <- summary_df$mean + summary_df$se + 0.012
 # Sample size labels
 summary_df$n_label <- paste0("n=", summary_df$n)
 
-panel_D <- ggplot(summary_df, aes(x = group, y = mean, color = group,
-                                  shape = modality)) +
+panel_D <- ggplot(summary_df, aes(x = modality, y = mean, color = group,
+                                  group = group, shape = modality)) +
   # Reference line at null expectation (0.5)
   geom_hline(yintercept = 0.5, linetype = "dashed", color = "gray50",
              linewidth = 0.5) +
@@ -100,8 +84,10 @@ panel_D <- ggplot(summary_df, aes(x = group, y = mean, color = group,
             show.legend = FALSE) +
   # Scales
   scale_color_manual(values = concordance_colors, guide = "none") +
-  scale_shape_manual(values = modality_shapes,
-                     guide = guide_legend(override.aes = list(size = 5, color = "black"))) +
+  # The x-axis now names the modality, so the shape legend would only repeat it.
+  # Group identity comes from colour, which the table below names.
+  scale_shape_manual(values = modality_shapes, guide = "none") +
+  scale_x_discrete(expand = expansion(add = 0.55)) +
   scale_y_continuous(expand = expansion(mult = c(0.05, 0.08))) +
   labs(x = NULL,
        y = expression(bold("Mean CS Score")),
@@ -109,12 +95,9 @@ panel_D <- ggplot(summary_df, aes(x = group, y = mean, color = group,
   theme_classic(base_size = 20) +
   theme(
     axis.title.y    = element_text(face = "bold", size = 20),
-    axis.text.x     = element_blank(),
+    axis.text.x     = element_text(color = "black", size = 18, face = "bold"),
     axis.text.y     = element_text(color = "black", size = 18),
-    legend.position = "bottom",
-    legend.text     = element_text(size = 16),
-    legend.margin   = margin(0, 0, 0, 0),
-    legend.box.margin = margin(-5, 0, 0, 0),
+    legend.position = "none",
     plot.margin     = margin(5, 10, 5, 5)
   )
 
@@ -151,18 +134,39 @@ group_colors_vec <- concordance_colors[table_df$Group]
 # Build tableGrob with compact styling
 tt <- ttheme_minimal(
   base_size = 20,
-  core    = list(fg_params = list(hjust = 0.5, x = 0.5, fontsize = 19),
-                 padding   = unit(c(4, 14), "pt")),
-  colhead = list(fg_params = list(fontface = "bold", fontsize = 20, hjust = 0.5, x = 0.5),
+  core    = list(fg_params = list(hjust = 0.5, x = 0.5, fontsize = 16),
+                 padding   = unit(c(4, 8), "pt")),
+  colhead = list(fg_params = list(fontface = "bold", fontsize = 17, hjust = 0.5, x = 0.5),
                  padding   = unit(c(4, 8), "pt"))
 )
 
 tbl_grob <- tableGrob(table_df, rows = NULL, theme = tt)
 
-# Force table to span full width; give Group column a bit more space
+# Force table to span full width. The "Mean Diff" headers are the widest cells,
+# so give those columns more room than the "%>0.5" ones; a uniform split clips
+# them once the Group column no longer needs width for long group names.
 ncols <- ncol(table_df)
-col_widths <- c(0.28, rep((1 - 0.28) / (ncols - 1), ncols - 1))
+
+# Measure the widest rendered string per column (headers are bold and usually
+# the widest) and allocate width proportionally, so no cell clips regardless of
+# how many groups the table holds.
+col_text <- lapply(seq_len(ncols), function(j) c(colnames(table_df)[j], table_df[[j]]))
+hdr_pt   <- 17   # colhead fontsize
+core_pt  <- 16   # core fontsize
+
+grDevices::pdf(NULL)
+graphics::par(ps = 12)
+nat <- vapply(seq_len(ncols), function(j) {
+  hdr  <- graphics::strwidth(col_text[[j]][1],  units = "inches", cex = hdr_pt / 12,  font = 2)
+  body <- max(graphics::strwidth(col_text[[j]][-1], units = "inches", cex = core_pt / 12, font = 2))
+  max(hdr, body)
+}, numeric(1))
+grDevices::dev.off()
+
+nat <- nat + 0.16                       # per-cell padding allowance (inches)
+col_widths <- nat / sum(nat)
 tbl_grob$widths <- unit(col_widths, "npc")
+cat(sprintf("  table col widths: %s\n", paste(sprintf("%.3f", col_widths), collapse = " ")))
 
 # Color group name cells to match dot plot
 for (i in seq_along(group_colors_vec)) {
@@ -170,7 +174,7 @@ for (i in seq_along(group_colors_vec)) {
   tbl_grob$grobs[[which(tbl_grob$layout$t == row_idx &
                          tbl_grob$layout$l == 1 &
                          tbl_grob$layout$name == "core-fg")]]$gp <-
-    gpar(fontsize = 19, col = group_colors_vec[i], fontface = "bold")
+    gpar(fontsize = 16, col = group_colors_vec[i], fontface = "bold")
 }
 
 # Add spanning "RNA" and "DNase" header row with lines above column headers
@@ -179,12 +183,12 @@ tbl_grob <- gtable::gtable_add_rows(tbl_grob, heights = unit(1.2, "lines"), pos 
 
 # "RNA" label spanning columns 2-3
 tbl_grob <- gtable::gtable_add_grob(tbl_grob,
-  textGrob("RNA", gp = gpar(fontsize = 20, fontface = "bold")),
+  textGrob("RNA", gp = gpar(fontsize = 17, fontface = "bold")),
   t = 1, l = 2, r = 3)
 
 # "DNase" label spanning columns 4-5
 tbl_grob <- gtable::gtable_add_grob(tbl_grob,
-  textGrob("DNase", gp = gpar(fontsize = 20, fontface = "bold")),
+  textGrob("DNase", gp = gpar(fontsize = 17, fontface = "bold")),
   t = 1, l = 4, r = 5)
 
 # Line under "RNA" (above its sub-headers)
@@ -199,24 +203,40 @@ tbl_grob <- gtable::gtable_add_grob(tbl_grob,
                gp = gpar(lwd = 2)),
   t = 1, l = 4, r = 5, z = Inf)
 
-# Combine dot plot and table
+# Combine dot plot and table.
+# The table height must follow its row count, otherwise a short table (3 groups
+# instead of 7) is centred inside a box still sized for the old layout and the
+# panel picks up a band of dead space. 1.2 units covered 9 rows in the original
+# three-method figure, hence 0.1333 per row.
+DOT_REL_H     <- 1.5
+TBL_ROW_H     <- 1.2 / 9                       # rel-height units per table row
+n_tbl_rows    <- nrow(table_df) + 2            # + column headers + RNA/DNase span
+tbl_rel_h     <- TBL_ROW_H * n_tbl_rows
+
 panel_D_combined <- plot_grid(
   panel_D, tbl_grob,
   ncol = 1,
-  rel_heights = c(1.5, 1.2)
+  rel_heights = c(DOT_REL_H, tbl_rel_h)
 )
+
+# Keep the dot plot at a constant physical size and let total height shrink with
+# the table, rather than stretching everything to a fixed 6.5 in.
+DOT_IN     <- 6.5 * (DOT_REL_H / (DOT_REL_H + 1.2))   # dot-plot inches, as before
+fig_height <- DOT_IN * (DOT_REL_H + tbl_rel_h) / DOT_REL_H
+cat(sprintf("  table rows: %d -> rel_height %.3f, figure height %.2f in\n",
+            n_tbl_rows, tbl_rel_h, fig_height))
 
 # =============================================================================
 # Save
 # =============================================================================
 
 output_pdf <- file.path(script_dir, "panel_D.pdf")
-ggsave(output_pdf, panel_D_combined, width = 6, height = 6.5, units = "in",
+ggsave(output_pdf, panel_D_combined, width = 6, height = fig_height, units = "in",
        bg = "white")
 cat(sprintf("Saved: %s\n", output_pdf))
 
 output_png <- file.path(script_dir, "panel_D.png")
-ggsave(output_png, panel_D_combined, width = 6, height = 6.5, units = "in",
+ggsave(output_png, panel_D_combined, width = 6, height = fig_height, units = "in",
        dpi = 300, bg = "white")
 cat(sprintf("Saved: %s\n", output_png))
 

@@ -12,9 +12,11 @@
 
 library(dplyr)
 
-s3_dir       <- "/Users/alexmccreight/StatFunGen/susieR2.0-benchmark/final_scripts/supplemental/S3"
-sparse_dir   <- "/Users/alexmccreight/StatFunGen/susieR2.0-benchmark/final_scripts/prediction_cv_results/sparse"
-complex_dir  <- "/Users/alexmccreight/StatFunGen/susieR2.0-benchmark/final_scripts/prediction_cv_results/complex"
+source("R/paths.R")
+
+s3_dir       <- supp_dir(3)
+sparse_dir   <- file.path(benchmark_root(), "final_scripts", "prediction_cv_results", "sparse")
+complex_dir  <- file.path(benchmark_root(), "final_scripts", "prediction_cv_results", "complex")
 output_dir   <- file.path(s3_dir, "data")
 
 methods <- c("SuSiE", "SuSiE_inf", "SuSiE_ash")

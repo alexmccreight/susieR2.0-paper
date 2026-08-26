@@ -18,8 +18,10 @@
 
 library(dplyr)
 
-s7_dir     <- "/Users/alexmccreight/StatFunGen/susieR2.0-paper/Supplementary_Figures/S7"
-data_dir   <- "/Users/alexmccreight/StatFunGen/susieR2.0-benchmark/final_scripts/500_rep_results/sparse"
+source("R/paths.R")
+
+s7_dir     <- supp_dir(7)
+data_dir   <- file.path(benchmark_root(), "final_scripts", "500_rep_results", "sparse")
 output_dir <- file.path(s7_dir, "data")
 dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
 

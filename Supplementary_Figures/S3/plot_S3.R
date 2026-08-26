@@ -11,7 +11,9 @@ library(ggplot2)
 library(cowplot)
 library(dplyr)
 
-script_dir <- "/Users/alexmccreight/StatFunGen/susieR2.0-benchmark/final_scripts/supplemental/S3"
+source("R/paths.R")
+
+script_dir <- supp_dir(3)
 data_dir   <- file.path(script_dir, "data")
 
 cat("Creating supplementary figure S3: TWAS prediction...\n")

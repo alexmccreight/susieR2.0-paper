@@ -18,7 +18,9 @@ suppressMessages({
   library(cowplot)
 })
 
-s7_dir    <- "/Users/alexmccreight/StatFunGen/susieR2.0-paper/Supplementary_Figures/S7"
+source("R/paths.R")
+
+s7_dir    <- supp_dir(7)
 data_path <- file.path(s7_dir, "data", "s7_finemapping_data.rds")
 if (!file.exists(data_path)) stop("Run extract_S7_data.R first.")
 
