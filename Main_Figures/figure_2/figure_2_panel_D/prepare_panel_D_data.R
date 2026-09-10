@@ -6,6 +6,9 @@
 # Loads AlphaGenome CS scores annotated with concordance group labels,
 # restricts to "complex regions" (gene-tissue pairs where standard SuSiE
 # identifies >= 2 credible sets), filters to RNA-seq and DNase modalities,
+# collapses to ONE observation per signal and modality (a consensus or
+# pairwise signal is matched by two or three near-identical credible sets, one
+# per method; averaging their scores avoids counting the same signal twice),
 # renames groups for display, computes per-group-per-modality summary
 # statistics and one-sided t-tests (mean > 0.5), and saves for plotting.
 #
@@ -77,6 +80,21 @@ cat(sprintf("  After filtering to RNA_SEQ + DNASE: %d rows\n", nrow(d)))
 
 # Rename modalities for display
 d$modality <- ifelse(d$modality == "RNA_SEQ", "RNA-seq", "DNase")
+
+# =============================================================================
+# One observation per signal x modality
+# =============================================================================
+# Each row of the scores file is one credible set. Signals matched across
+# methods (Jaccard >= 0.75) therefore appear once per member method with nearly
+# identical scores. Average the member scores so that the unit of analysis, and
+# hence n and the standard error, is the signal rather than the credible set.
+
+n_cs_rows <- nrow(d)
+d <- d[!is.na(d$cs_score), ]
+d <- aggregate(cs_score ~ signal_id + gene_id + tissue + pair + modality + group,
+               data = d, FUN = mean)
+cat(sprintf("  Collapsed %d credible-set rows to %d signal x modality observations\n",
+            n_cs_rows, nrow(d)))
 
 # =============================================================================
 # Rename groups for display (match Panel B labels)

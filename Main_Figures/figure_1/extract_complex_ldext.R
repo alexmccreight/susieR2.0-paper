@@ -1,24 +1,24 @@
 #!/usr/bin/env Rscript
 
 # =============================================================================
-# Figure 1 (panels C-F): complex S1/S2 fine-mapping summaries WITH LD extension
+# Figure 1 (panels C-F): complex S1/S2 fine-mapping summaries
 # =============================================================================
-# Recomputes Top-N Power/FDR/Size for the two complex scenarios using the
-# LD-extension (0.99) credible sets stored in the *_ldext.rds files
-# (version = "xcorr_ext"), replacing the previous un-extended fit$sets$cs
-# construction.
-#
-# This mirrors the original benchmark extract_complex_metrics.R Top-N logic
-# EXACTLY -- same N vector, same Power/FDR/Size definitions, same mean/SE
-# aggregation -- but reads
-#   rep$credible_sets[[method]][["xcorr_ext"]]$cs
-# instead of
-#   rep$fits[[method]]$fit$sets$cs.
+# Computes Top-N Power/FDR/Size for the two complex scenarios from the
+# credible sets stored in the *_ldext.rds files. The post-processing step
+# (susieR2.0-benchmark ldext_postprocess.R) stores three constructions per
+# replicate and method:
+#   original    fit-time sets (subsampled purity)
+#   xcorr_noext 95% sets, exact purity >= 0.5 from the in-sample cor(X),
+#               no correlation extension  <- used here and in S1/S5/S10
+#   xcorr_ext   as above plus the 0.99 correlation extension (S7/S8 only)
 #
 # For each replicate and each N in {3, 5, 10, 15, 20, 25}:
-#   - "Top N" causal set = the N variants with largest |beta|
+#   - "Top N" causal set = the N variants with largest |beta| (all p variants
+#     ranked; N is capped at the number of nonzero effects)
 #   - Power = fraction of Top-N variants captured by at least one CS
-#   - FDR   = fraction of credible sets that contain no Top-N variant
+#   - FDR   = fraction of credible sets that contain no Top-N variant;
+#             a replicate with no credible set contributes FDR = 0 (no false
+#             discovery was made), matching the sparse-setting convention
 #
 # Inputs  (read-only, benchmark):  500_rep_results/complex_S{1,2}/sim_*_ldext.rds
 # Outputs (production):            figure_1/data/complex_S{1,2}_finemapping_summary.rds
@@ -32,7 +32,7 @@ source("R/paths.R")
 ldext_root <- file.path(benchmark_root(), "final_scripts", "500_rep_results")
 fig1_data  <- file.path(fig_dir(1), "data")
 
-VERSION      <- "xcorr_ext"
+VERSION      <- "xcorr_noext"   # exact-purity 95% sets, no correlation extension
 N_values     <- c(3, 5, 10, 15, 20, 25)
 method_names <- c("susie" = "SuSiE", "susie_inf" = "SuSiE-inf", "susie_ash" = "SuSiE-ash")
 
@@ -54,7 +54,8 @@ scenarios <- list(
 # -----------------------------------------------------------------------------
 compute_metrics <- function(cs_list, causal_set) {
   if (is.null(cs_list) || length(cs_list) == 0) {
-    return(data.frame(Power = 0, FDR = NA, Size = 0))
+    # No credible set reported: nothing was discovered, so no false discovery
+    return(data.frame(Power = 0, FDR = 0, Size = 0))
   }
 
   n_causal <- length(causal_set)
@@ -99,7 +100,7 @@ aggregate_summary <- function(rep_data) {
 # Process each scenario
 # -----------------------------------------------------------------------------
 for (sc in scenarios) {
-  cat(sprintf("\n=== %s (LD extension = 0.99) ===\n", sc$label))
+  cat(sprintf("\n=== %s (credible sets: %s) ===\n", sc$label, VERSION))
   if (!file.exists(sc$file)) stop("Missing ldext file: ", sc$file)
 
   sim  <- readRDS(sc$file)
@@ -114,9 +115,10 @@ for (sc in scenarios) {
 
     beta       <- rep$beta
     ranked_idx <- order(abs(beta), decreasing = TRUE)
+    n_nonzero  <- sum(beta != 0)
 
     for (N in N_values) {
-      causal_set <- ranked_idx[1:N]
+      causal_set <- ranked_idx[seq_len(min(N, n_nonzero))]
 
       for (mkey in names(method_names)) {
         if (is.null(rep$credible_sets[[mkey]])) next   # method had no fit

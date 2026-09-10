@@ -9,6 +9,11 @@
 #
 # Input:  panel_D_data.rds (from prepare_panel_D_data.R)
 # Output: panel_D.pdf, panel_D.png, panel_D_plot.rds
+#
+# Method-agnostic: the number of groups comes from the input. Optional
+# command-line arguments 1 and 2 override the input file and the output
+# directory, which is how the three-method version for Supplementary S11 is
+# produced (see run_all.R).
 # =============================================================================
 
 library(ggplot2)
@@ -24,7 +29,11 @@ source("R/paths.R")
 source("R/aesthetics.R")
 
 script_dir <- file.path(fig_dir(2), "figure_2_panel_D")
-data_path  <- file.path(script_dir, "panel_D_data.rds")
+.cli <- commandArgs(trailingOnly = TRUE)
+.arg <- function(i, default) if (length(.cli) >= i && nzchar(.cli[i])) .cli[i] else default
+data_path  <- .arg(1, file.path(script_dir, "panel_D_data.rds"))
+out_dir    <- .arg(2, script_dir)
+dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
 
 # =============================================================================
 # Shared aesthetics (match Panel B concordance colors)
@@ -230,18 +239,18 @@ cat(sprintf("  table rows: %d -> rel_height %.3f, figure height %.2f in\n",
 # Save
 # =============================================================================
 
-output_pdf <- file.path(script_dir, "panel_D.pdf")
+output_pdf <- file.path(out_dir, "panel_D.pdf")
 ggsave(output_pdf, panel_D_combined, width = 6, height = fig_height, units = "in",
        bg = "white")
 cat(sprintf("Saved: %s\n", output_pdf))
 
-output_png <- file.path(script_dir, "panel_D.png")
+output_png <- file.path(out_dir, "panel_D.png")
 ggsave(output_png, panel_D_combined, width = 6, height = fig_height, units = "in",
        dpi = 300, bg = "white")
 cat(sprintf("Saved: %s\n", output_png))
 
 # Save plot object for use by create_figure2.R
-plot_path <- file.path(script_dir, "panel_D_plot.rds")
+plot_path <- file.path(out_dir, "panel_D_plot.rds")
 saveRDS(panel_D_combined, plot_path)
 cat(sprintf("Saved: %s\n", plot_path))
 

@@ -3,20 +3,19 @@
 # =============================================================================
 # Figure 2, Panel E — Data Preparation
 # =============================================================================
-# Loads SuSiE fit objects for ENSG00000163431 (DLPFC tissue) for the main-figure
-# methods (standard, inf), extracts PIPs, variant positions, and credible set
-# membership, and saves a clean plotting-ready data frame.
+# Loads fit objects for ENSG00000163431 (DLPFC tissue), extracts PIPs, variant
+# positions, and credible set membership, and saves plotting-ready data.
 #
 # Gene:   ENSG00000163431 (chr1)
 # Tissue: DLPFC (dorsolateral prefrontal cortex)
-# Story:  SuSiE and SuSiE-inf share a signal at ~201.917 Mb. SuSiE additionally
-#         reports a diffuse secondary CS2 spanning ~201.788-201.935 Mb.
+# SuSiE and SuSiE-inf select distinct nearby singletons. SuSiE also reports a
+# diffuse CS; SuSiE-ash has a CS at the inf lead and an additional CS near 201.807 Mb.
 #
-# SuSiE-ash was removed from main Figure 2; the three-method version of this
-# panel is preserved in Supplementary Figure S11.
+# Pass --include-ash to prepare the three-method panel for Supplementary
+# Figure S11 from the same raw fit objects.
 #
-# Input:  STANDARD/INF fit RDS files (in this directory)
-# Output: panel_E_data.rds
+# Input:  STANDARD/INF (and optionally ASH) fit RDS files in data/panel_E
+# Output: panel_E_data.rds here, or in Supplementary_Figures/S11/data
 # =============================================================================
 
 # =============================================================================
@@ -26,20 +25,29 @@
 source("R/paths.R")
 source("R/aesthetics.R")
 
+args <- commandArgs(trailingOnly = TRUE)
+if (any(!args %in% "--include-ash")) {
+  stop("Unknown argument(s): ", paste(args[!args %in% "--include-ash"], collapse = ", "))
+}
+include_ash <- "--include-ash" %in% args
+
 fig2_dir   <- fig_dir(2)
 script_dir <- file.path(fig2_dir, "figure_2_panel_E")
 data_dir   <- file.path(fig2_dir, "data", "panel_E")
+output_dir <- if (include_ash) file.path(supp_dir(11), "data") else script_dir
 
 fit_files <- list(
   standard = file.path(data_dir, "STANDARD-ROSMAP_DeJager_eQTL_twas.chr1_ENSG00000163431.univariate_bvsr.rds"),
+  ash      = file.path(data_dir, "ASH-ROSMAP_DeJager_eQTL_twas.chr1_ENSG00000163431.univariate_bvsr.rds"),
   inf      = file.path(data_dir, "INF-ROSMAP_DeJager_eQTL_twas.chr1_ENSG00000163431.univariate_bvsr.rds")
 )
+if (!include_ash) fit_files$ash <- NULL
 
 gene_id    <- "ENSG00000163431"
 tissue_key <- "DLPFC_DeJager_eQTL_ENSG00000163431"
 
-method_labels <- c(standard = "SuSiE", inf = "SuSiE-inf")
-method_order  <- c("SuSiE", "SuSiE-inf")
+method_labels <- c(standard = "SuSiE", ash = "SuSiE-ash", inf = "SuSiE-inf")
+method_order  <- unname(method_labels[names(fit_files)])
 
 # =============================================================================
 # Extract data from each method
@@ -157,6 +165,7 @@ output <- list(
   tissue      = "DLPFC"
 )
 
-output_path <- file.path(script_dir, "panel_E_data.rds")
+dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
+output_path <- file.path(output_dir, "panel_E_data.rds")
 saveRDS(output, output_path)
 cat(sprintf("\nSaved: %s\n", output_path))

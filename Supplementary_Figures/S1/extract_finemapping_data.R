@@ -1,15 +1,20 @@
 #!/usr/bin/env Rscript
 
 # =============================================================================
-# Supplemental S1: Extract sparse fine-mapping data (WITH LD extension = 0.99)
+# Supplemental S1: Extract sparse fine-mapping data (un-extended credible sets)
 # =============================================================================
 # Reads the per-K *_ldext.rds files (500 replicates each), takes the credible-set
-# Power/FDR metrics for the LD-extension construction (version = "xcorr_ext"),
-# and saves a summary RDS for fast plotting (panels S1A / S1B).
+# Power/FDR metrics for the exact-purity, no-extension construction
+# (version = "xcorr_noext"; purity >= 0.5 from the in-sample cor(X)), and saves
+# a summary RDS for fast plotting (panels S1A / S1B). The optional correlation
+# extension is evaluated separately in S7.
+#
+# Per-replicate metrics were precomputed by the ldext post-processing step; a
+# replicate with no credible set contributes FDR = 0.
 #
 # Only S1A/S1B (credible-set level) use this file. The PIP-level panels
 # (S1C-S1J) are produced by extract_pip_roc.R / extract_pip_calibration.R and
-# are unaffected by LD extension.
+# do not depend on credible-set construction.
 #
 # Input:  500_rep_results/sparse/sim_nrep500_sparse_h2persnp0.03_K{1-5}_n1000_ldext.rds
 # Output: data/finemapping_data.rds   (in this production S1 folder)
@@ -27,7 +32,7 @@ output_dir <- file.path(s1_dir, "data")
 # Parameters
 h2_value <- 0.03
 K_values <- 1:5
-VERSION  <- "xcorr_ext"   # LD-extension (0.99) credible sets
+VERSION  <- "xcorr_noext" # exact-purity 95% sets, no correlation extension
 
 # -----------------------------------------------------------------------------
 # Extract metrics from a single *_ldext.rds file
@@ -38,7 +43,7 @@ extract_metrics <- function(file_path, h2_per_snp, K) {
   metrics_list <- lapply(data$replicates, function(rep) rep$metrics)
   all_metrics  <- bind_rows(metrics_list)
 
-  # Keep only the LD-extension version and the three main methods
+  # Keep only the chosen credible-set construction and the three main methods
   all_metrics <- all_metrics %>%
     filter(version == VERSION,
            Method %in% c("SuSiE", "SuSiE-inf", "SuSiE.ash"))
@@ -64,7 +69,7 @@ extract_metrics <- function(file_path, h2_per_snp, K) {
 # -----------------------------------------------------------------------------
 # Process all K values
 # -----------------------------------------------------------------------------
-cat(sprintf("Extracting sparse data WITH LD extension (version = %s, h2_per_snp = %.2f, 500 reps)\n",
+cat(sprintf("Extracting sparse data (credible sets: %s, h2_per_snp = %.2f, 500 reps)\n",
             VERSION, h2_value))
 
 all_data <- data.frame()

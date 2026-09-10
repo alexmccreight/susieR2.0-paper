@@ -1,87 +1,36 @@
 #!/usr/bin/env Rscript
 
 # =============================================================================
-# Figure 1, Panel F — Complex Simulation FDR (Top N)
+# Figure 1, Panel F — Complex S2 FDR vs Top N causal variants
 # =============================================================================
-# Line plot with points and error bars showing 95% CS FDR vs Top N
-# causal variants (3, 5, 7, 9, 11, 23). Includes axis break and FDR=0.05 line.
+# Line plot with points and error bars showing 95% CS FDR against the number
+# of top-|beta| variants treated as causal (N = 3, 5, 10, 15, 20, 25).
+# The panel is drawn by plot_topn_panel() in R/topn_panels.R, shared with the
+# three-method version in Supplementary Figure S10.
 #
-# Input:  complex_finemapping_summary.rds (from complex_results/)
+# Input:  data/complex_S2_finemapping_summary.rds  (from extract_complex_ldext.R; un-extended credible sets)
 # Output: panel_F_plot.rds, panel_F.pdf, panel_F.png
 # =============================================================================
 
 library(ggplot2)
-library(dplyr)
-
-# =============================================================================
-# Paths
-# =============================================================================
 
 source("R/paths.R")
 source("R/aesthetics.R")
+source("R/topn_panels.R")
 
 fig1_dir   <- fig_dir(1)
 script_dir <- file.path(fig1_dir, "figure_1_panel_F")
 data_path  <- file.path(fig1_dir, "data", "complex_S2_finemapping_summary.rds")
 
-# =============================================================================
-# Shared aesthetics
-# =============================================================================
-
-# method_colors, theme_panel and MAIN_METHODS come from R/aesthetics.R
-
-# =============================================================================
-# Load data
-# =============================================================================
-
-cat("Loading complex fine-mapping summary...\n")
+cat("Loading complex fine-mapping summary (S2)...\n")
 if (!file.exists(data_path)) stop("Data file not found: ", data_path)
 complex_data <- readRDS(data_path)
 
 # Main figure shows SuSiE + SuSiE-inf only. The three-method version that
-# retains SuSiE-ash is Supplementary Figure S10.
-complex_data <- complex_data[complex_data$Method %in% MAIN_METHODS, ]
-complex_data$Method <- factor(complex_data$Method,
-                              levels = MAIN_METHODS)
-
-# =============================================================================
-# Create plot
-# =============================================================================
-
-cat("Creating Panel F (Complex FDR)...\n")
-
-y_limits <- c(0, 0.35)
-
-complex_data <- complex_data %>%
-  mutate(
-    N_position = case_when(
-      N == 25 ~ 1, N == 20 ~ 2, N == 15 ~ 3,
-      N == 10 ~ 4, N == 5 ~ 5, N == 3 ~ 6,
-      TRUE ~ NA_real_
-    )
-  )
-
-panel_F <- ggplot(complex_data, aes(x = N_position, y = FDR_mean,
-                                    color = Method, group = Method)) +
-  geom_line(linewidth = 1.0) +
-  geom_errorbar(
-    aes(ymin = FDR_mean - FDR_se, ymax = FDR_mean + FDR_se),
-    width = 0.25, linewidth = 0.5
-  ) +
-  geom_point(size = 3.5) +
-  geom_hline(yintercept = 0.05, linetype = "dotted", color = "red", linewidth = 0.8) +
-  scale_color_manual(values = method_colors, breaks = MAIN_METHODS) +
-  scale_x_continuous(
-    breaks = 1:6,
-    labels = c("25", "20", "15", "10", "5", "3")
-  ) +
-  labs(x = "Top N as Causal Variants", y = "95% CS FDR") +
-  theme_panel +
-  coord_cartesian(ylim = y_limits, xlim = c(0.5, 6.5))
-
-# =============================================================================
-# Save
-# =============================================================================
+# retains SuSiE-ash is Supplementary Figure S10 (built by
+# Supplementary_Figures/S10/build_S10_panels.R from the same summary file).
+cat("Creating Panel F (Complex S2 FDR)...\n")
+panel_F <- plot_topn_panel(complex_data, metric = "FDR", methods = MAIN_METHODS)
 
 output_pdf <- file.path(script_dir, "panel_F.pdf")
 ggsave(output_pdf, panel_F, width = 6, height = 5, units = "in", bg = "white")

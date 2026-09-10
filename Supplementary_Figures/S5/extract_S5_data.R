@@ -2,17 +2,14 @@
 
 # =============================================================================
 # Supplemental S5: Extract CS-level data for size & purity figure
-#                  (WITH LD extension = 0.99)
+#                  (un-extended credible sets)
 # =============================================================================
 # Reads the *_ldext.rds files for 4 scenarios and extracts one row per credible
-# set per method per replicate, using the LD-extension construction
-# (version = "xcorr_ext"): cs_size = length of the extended CS, and
-# min_abs_corr = the exact all-pairs minimum |r| within that CS (the purity the
-# ldext pipeline stored).
-#
-# NOTE: vs the previous (un-extended) S5, extension grows credible sets, so the
-# CS-size bins shift toward larger sizes and median purity may drop; the total
-# number of CS is essentially unchanged (extension does not add/remove CS).
+# set per method per replicate, using the exact-purity, no-extension
+# construction (version = "xcorr_noext"): cs_size = number of variants in the
+# 95% set, and min_abs_corr = the exact all-pairs minimum |r| within that set
+# (purity >= 0.5 from the in-sample cor(X)). The correlation extension is
+# evaluated separately in S7/S8.
 #
 # Inputs (read-only, under final_scripts/500_rep_results/):
 #   - sparse/sim_nrep500_sparse_h2persnp0.03_K{1..5}_n1000_ldext.rds
@@ -36,7 +33,7 @@ rep_results_dir <- file.path(benchmark_root(), "final_scripts", "500_rep_results
 output_dir <- file.path(s5_dir, "data")
 dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
 
-VERSION <- "xcorr_ext"   # LD-extension (0.99) credible sets
+VERSION <- "xcorr_noext" # exact-purity 95% sets, no correlation extension
 
 # Each scenario points at one or more *_ldext.rds files
 scenarios <- list(
@@ -153,7 +150,7 @@ out <- list(
     method_levels   = method_levels,
     scenario_levels = scenario_levels,
     size_bin_levels = size_bin_levels,
-    ld_extend       = 0.99,
+    ld_extend       = NA,      # no correlation extension in this construction
     version         = VERSION,
     elapsed_seconds = as.numeric(difftime(Sys.time(), job_start, units = "secs"))
   )

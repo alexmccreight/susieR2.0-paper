@@ -11,6 +11,9 @@
 #     this repository (see SUSIER2_BENCHMARK_ROOT in README.md)
 #   - Figure 2 panel E's prepare_gene_models.R, which queries the Ensembl REST API
 #   - Figure 1 panel A, which is a TikZ diagram requiring XeLaTeX
+#
+# Entries may carry command-line arguments after the script path (space
+# separated); they are passed through to Rscript unchanged.
 # =============================================================================
 
 source("R/paths.R")
@@ -51,7 +54,20 @@ steps <- c(
   "Supplementary_Figures/S7/plot_S7.R",
   "Supplementary_Figures/S8/plot_S8.R",
   "Supplementary_Figures/S9/plot_S9.R",
+  "Supplementary_Figures/S10/build_S10_panels.R",
   "Supplementary_Figures/S10/plot_S10.R",
+
+  # ---- S11 panels D/E: three-method enrichment and locus, rebuilt from source ----
+  # Panels A-C retain their saved objects; see Supplementary_Figures/S11/plot_S11.R.
+  paste("Main_Figures/figure_2/figure_2_panel_D/prepare_panel_D_data.R",
+        "Main_Figures/figure_2/data/alphagenome_cs_group_scores.csv",
+        "Main_Figures/figure_2/data/alphagenome_cs_group_assignments.rds",
+        "Supplementary_Figures/S11/data/panel_D_data.rds"),
+  paste("Main_Figures/figure_2/figure_2_panel_D/plot_panel_D.R",
+        "Supplementary_Figures/S11/data/panel_D_data.rds",
+        "Supplementary_Figures/S11/data"),
+  "Main_Figures/figure_2/figure_2_panel_E/prepare_panel_E_data.R --include-ash",
+  "Main_Figures/figure_2/figure_2_panel_E/plot_panel_E.R --include-ash",
   "Supplementary_Figures/S11/plot_S11.R"
 )
 

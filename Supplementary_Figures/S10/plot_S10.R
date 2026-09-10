@@ -12,12 +12,9 @@
 #   C: Complex S2 Power    D: Complex S2 FDR
 #
 # Input:  data/panel_{C,D,E,F}_plot.rds
-#           Snapshots of the pre-revision Figure 1 panel objects, taken before
-#           the panel scripts were changed to drop SuSiE-ash. Because
-#           Main_Figures/figure_1/data/complex_S{1,2}_finemapping_summary.rds
-#           still contains all three methods, these are also regenerable: run
-#           the Figure 1 panel scripts with MAIN_METHODS replaced by
-#           ALL_METHODS (see R/aesthetics.R).
+#           Built by build_S10_panels.R from the same summary tables as
+#           Figure 1 panels C-F (Main_Figures/figure_1/data/), drawn with all
+#           three methods via plot_topn_panel() in R/topn_panels.R.
 # Output: S10.pdf, S10.png
 # =============================================================================
 
@@ -33,7 +30,7 @@ s10_dir  <- supp_dir(10)
 data_dir <- file.path(s10_dir, "data")
 
 # =============================================================================
-# Load the snapshotted panel objects
+# Load the panel objects built by build_S10_panels.R
 # =============================================================================
 
 panel_files <- c(A = "panel_C_plot.rds",   # Complex S1 Power
@@ -41,14 +38,14 @@ panel_files <- c(A = "panel_C_plot.rds",   # Complex S1 Power
                  C = "panel_E_plot.rds",   # Complex S2 Power
                  D = "panel_F_plot.rds")   # Complex S2 FDR
 
-panel_titles <- c(A = "Complex S1: 95% CS Power",
-                  B = "Complex S1: 95% CS FDR",
-                  C = "Complex S2: 95% CS Power",
-                  D = "Complex S2: 95% CS FDR")
+# Panels carry no titles: the manuscript caption states which scenario each
+# one shows, and the y-axis label already distinguishes power from FDR.
+#   A = Complex S1 Power   B = Complex S1 FDR
+#   C = Complex S2 Power   D = Complex S2 FDR
 
 panels <- lapply(names(panel_files), function(k) {
   p <- file.path(data_dir, panel_files[[k]])
-  if (!file.exists(p)) stop("Missing snapshot: ", p)
+  if (!file.exists(p)) stop("Missing panel object (run build_S10_panels.R first): ", p)
   readRDS(p)
 })
 names(panels) <- names(panel_files)
@@ -57,8 +54,7 @@ names(panels) <- names(panel_files)
 for (k in names(panels)) {
   m <- unique(as.character(panels[[k]]$data$Method))
   if (!any(grepl("ash", m, ignore.case = TRUE))) {
-    stop("Panel ", k, " has no SuSiE-ash series; the snapshot in data/ looks ",
-         "like a post-revision (two-method) object.")
+    stop("Panel ", k, " has no SuSiE-ash series; rebuild data/ with build_S10_panels.R.")
   }
 }
 
@@ -69,12 +65,11 @@ for (k in names(panels)) {
 supp_theme <- theme(
   axis.title  = element_text(face = "bold", size = 13),
   axis.text   = element_text(color = "black", size = 11),
-  plot.title  = element_text(face = "bold", size = 14, hjust = 0.5),
   plot.margin = margin(8, 8, 8, 8)
 )
 
 panels <- lapply(names(panels), function(k) {
-  panels[[k]] + ggtitle(panel_titles[[k]]) + supp_theme
+  panels[[k]] + supp_theme
 })
 names(panels) <- names(panel_files)
 

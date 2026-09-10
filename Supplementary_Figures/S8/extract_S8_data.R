@@ -11,8 +11,11 @@
 # so S8 can show 2 lines per method per panel (6 lines).
 #
 # For each replicate and each N in {3,5,10,15,20,25}:
-#   Top-N causal set = N variants with largest |beta|
-#   Power = fraction of Top-N captured by >=1 CS; FDR = CS-with-no-Top-N / n_cs
+#   Top-N causal set = N variants with largest |beta|, with N capped at the
+#     number of nonzero effects (23 in the polygenic-background scenario, so
+#     its N = 25 point uses all 23 causal variants)
+#   Power = fraction of Top-N captured by >=1 CS; FDR = CS-with-no-Top-N / n_cs,
+#     with FDR = 0 for a replicate that reports no credible set
 #
 # Inputs (read-only):  500_rep_results/{complex,complex_S1,complex_S2}/sim_*_ldext.rds
 # Output:              data/s8_finemapping_data.rds
@@ -46,7 +49,8 @@ scenarios <- list(
 # -----------------------------------------------------------------------------
 compute_metrics <- function(cs_list, causal_set) {
   if (is.null(cs_list) || length(cs_list) == 0) {
-    return(list(Power = 0, FDR = NA))
+    # No credible set reported: nothing was discovered, so no false discovery
+    return(list(Power = 0, FDR = 0))
   }
   n_causal <- length(causal_set)
   n_cs     <- length(cs_list)
@@ -74,9 +78,10 @@ for (sc in scenarios) {
 
     beta       <- rep$beta
     ranked_idx <- order(abs(beta), decreasing = TRUE)
+    n_nonzero  <- sum(beta != 0)
 
     for (N in N_values) {
-      causal_set <- ranked_idx[1:N]
+      causal_set <- ranked_idx[seq_len(min(N, n_nonzero))]
       for (mkey in names(method_names)) {
         if (is.null(rep$credible_sets[[mkey]])) next
         for (v in versions) {
