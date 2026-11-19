@@ -3,9 +3,9 @@
 This section contains the scripts used to assemble each supplementary figure from pre-computed results. The upstream simulation and analysis code lives under **Simulation Studies** and **Data Applications**.
 
 - **Figure S1**: Sparse fine-mapping benchmarks comparing SuSiE, SuSiE-ash, and SuSiE-inf on power, FDR, PIP ROC curves, and PIP calibration across K = 1–5 causal variants (credible sets: 95% coverage, exact purity ≥ 0.5, no correlation extension)
-- **Figure S2**: Unmappable-effects worked example showing PIPs and credible sets from SuSiE (L=10), SuSiE+BB, SuSiE-inf, and SuSiE-ash on a single simulated dataset
+- **Figure S2**: Unmappable-effects worked example showing PIPs and credible sets from SuSiE (L=10), SuSiE-inf, and SuSiE-ash on a single simulated dataset
 - **Figure S3**: TWAS cross-validation prediction R² and per-replicate winner proportions for SuSiE, SuSiE-ash, and SuSiE-inf across sparse and complex (oligogenic-plus-infinitesimal) scenarios
-- **Figure S4**: Sparse fine-mapping comparison of SuSiE credible-set variants: default (purity ≥ 0.5), high-purity filter (≥ 0.8), SuSiE+BLiP, and SuSiE+attainable coverage on power, FDR, purity, and CS size across K = 1–5 causal variants
+- **Figure S4**: Sparse fine-mapping comparison of SuSiE credible-set variants: default (purity ≥ 0.5), high-purity filter (≥ 0.8), SuSiE+BLiP, and SuSiE+attainable coverage on power, FDR, purity, and CS size across K = 1–5 causal variants, with an additional panel showing the full posterior mass of CSs reported by SparsePro (2023) and susieR
 - **Figure S5**: Credible-set count by size bin and median purity for SuSiE, SuSiE-ash, and SuSiE-inf across sparse and three complex (oligogenic-plus-infinitesimal) scenarios (un-extended credible sets, as in Figure 1)
 - **Figure S6**: Runtime speedup of susieR 2.0 over susieR 1.0 for RSS fine-mapping with regularization (`susie_rss_lambda`), shown as fold reduction in median runtime across feature/sample (p/n) ratios at p = 5000, for both LD-matrix and genotype-matrix inputs
 - **Figure S7**: Sparse fine-mapping power and FDR for SuSiE, SuSiE-ash, and SuSiE-inf comparing credible sets without LD extension against credible sets with LD extension (0.99), shown as two bars per method across K = 1–5 causal variants
@@ -53,3 +53,44 @@ They write the three-method plotting data and plot object to `S11/data/`, then
 assemble `S11/S11.pdf` and `S11/S11.png`. Colors are specified in
 `Main_Figures/figure_2/figure_2_panel_E/plot_panel_E.R` when the plot is constructed.
 Running the panel scripts without `--include-ash` builds the two-method main figure.
+
+## Rebuilding the attainable coverage panel
+
+The repository's S4 is **Figure S7 in the manuscript**. Panels A–D use the
+saved benchmark metrics in `S4/data/s4_metrics.rds`. Panel E uses
+`S4/data/paired-posterior-mass.csv`. Redraw all five panels together with:
+
+```bash
+Rscript Supplementary_Figures/S4/plot_S4.R
+```
+
+To rerun the Panel E simulation, use `susieR` 0.16.6 from commit
+`ef213feed2cb82419677661a8c986e1504df2c73`, Python 3
+with `numpy`, `pandas`, and `scipy`. Install the pinned fitting build in a separate R
+library if another `susieR` version is already in use. Set `PYTHON` to the Python
+executable if it is not the `python3` on the R session path:
+
+```r
+remotes::install_github(
+  "stephenslab/susieR@ef213feed2cb82419677661a8c986e1504df2c73",
+  upgrade = "never"
+)
+```
+
+```bash
+Rscript Supplementary_Figures/S4/simulate_S4E.R
+Rscript Supplementary_Figures/S4/plot_S4.R
+```
+
+The simulation script downloads the public 121-variant ADSP sketch example
+and susieR reporting code at commit
+`ed6e491e3d0235ea5fa2e8545ea206b5d759eb6e`, together with the original 2023
+SparsePro implementation at commit
+`e13ac87d6e650d7682ff1f33f6f9898d66932d64`. With seed 83011, it generates
+150 replicates for each combination of K = 1 or 2 causal variants and total
+signal strength nh² = 24 or 80. Both reporting rules receive the same fitted
+single-effect posteriors. For each effect reported by both rules, the script
+records the posterior mass, size, and causal-variant inclusion of each CS.
+The expected result is 599 converged fits and 567 paired sets: 152 SparsePro
+sets and 0 susieR sets contain less than 95% of the full posterior mass.
+The plotting script writes `S4/S4.pdf` and `S4/S4.png`.

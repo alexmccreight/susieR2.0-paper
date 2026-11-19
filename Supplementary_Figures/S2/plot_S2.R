@@ -1,9 +1,15 @@
 #!/usr/bin/env Rscript
 
-# Manuscript Figure S5 (repository figure S2).
-# A-B: true effects and marginal associations.
-# C-E: PIPs for SuSiE, SuSiE-inf and SuSiE-ash.
-# F-H: credible sets on the true effects for the same methods.
+# =============================================================================
+# Supplemental S2: Unmappable Effects Figure (manuscript Figure S5)
+# =============================================================================
+# Row 1: Ground truth (2 panels, 50% each)
+#   A: True effect sizes    B: Z-scores (-log10 p)
+# Row 2: PIP plots (3 panels, one per method)
+#   C: SuSiE (L=10)   D: SuSiE-inf   E: SuSiE-ash
+# Row 3: CS on true effects (3 panels, same method order)
+#   F: SuSiE (L=10)   G: SuSiE-inf   H: SuSiE-ash
+# =============================================================================
 
 library(ggplot2)
 library(cowplot)
@@ -13,7 +19,7 @@ source("R/paths.R")
 script_dir <- supp_dir(2)
 data_dir   <- file.path(script_dir, "data")
 
-cat("Creating manuscript Figure S5 (repository S2)...\n")
+cat("Creating supplementary figure S2: unmappable effects example...\n")
 
 # =============================================================================
 # Load cached results
@@ -255,13 +261,29 @@ row1 <- cowplot::plot_grid(panel_A, panel_B, nrow = 1, rel_widths = c(1, 1),
                            align = "hv", axis = "tblr",
                            labels = c("A", "B"), label_size = 15, label_fontface = "bold")
 
-# PIPs and credible sets use the same three method columns.
+# =============================================================================
+# ROW 2: PIP Plots (3 panels)
+# =============================================================================
+cat("Creating Row 2: PIP plots...\n")
+
 panel_C <- susie_plot_gg(fit_susie, y = "PIP", b = b, title = "SuSiE")
 panel_D <- susie_plot_gg(fit_inf, y = "PIP", b = b, title = "SuSiE-inf")
 panel_E <- susie_plot_gg(fit_ash, y = "PIP", b = b, title = "SuSiE-ash")
+
+# =============================================================================
+# ROW 3: CS on True Effects (3 panels)
+# =============================================================================
+cat("Creating Row 3: CS on true effects plots...\n")
+
 panel_F <- make_cs_effects_plot(fit_susie, b, NULL)
 panel_G <- make_cs_effects_plot(fit_inf, b, NULL)
 panel_H <- make_cs_effects_plot(fit_ash, b, NULL)
+
+# =============================================================================
+# Combine all rows
+# =============================================================================
+# Align the two lower rows so each method occupies the same column.
+cat("Combining all rows into final figure...\n")
 
 lower_panels <- cowplot::align_plots(
   panel_C, panel_D, panel_E, panel_F, panel_G, panel_H,
@@ -289,7 +311,8 @@ ggsave(output_png, final_figure,
        width = 11, height = 8.5, units = "in", dpi = 300, bg = "white")
 
 cat(sprintf("\nFigure saved to:\n  - %s\n  - %s\n", output_pdf, output_png))
-cat("\nCredible sets:\n")
-cat(sprintf("SuSiE:     %d\n", length(fit_susie$sets$cs)))
-cat(sprintf("SuSiE-inf: %d\n", length(fit_inf$sets$cs)))
-cat(sprintf("SuSiE-ash: %d\n", length(fit_ash$sets$cs)))
+# Print summary
+cat("\n=== Summary ===\n")
+cat(sprintf("SuSiE (L=10):  %d credible sets\n", length(fit_susie$sets$cs)))
+cat(sprintf("SuSiE-inf:     %d credible sets\n", length(fit_inf$sets$cs)))
+cat(sprintf("SuSiE-ash:     %d credible sets\n", length(fit_ash$sets$cs)))
