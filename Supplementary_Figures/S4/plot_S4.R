@@ -1,14 +1,17 @@
 #!/usr/bin/env Rscript
 
 # =============================================================================
-# Supplemental S4: 2x2 figure
+# Supplemental S4: 2x2 figure with Panel E (manuscript Figure S7)
 # =============================================================================
-# Panel A (top-left):     Power dot+errorbar across K, 5 method variants
-# Panel B (top-right):    FDR   dot+errorbar across K, 5 method variants
-# Panel C (bottom-left):  Purity violin (5 variants, pooled across K and reps)
-# Panel D (bottom-right): CS size box plot (5 variants, pooled)
+# Panel A (top-left):     Power bars and standard errors across K
+# Panel B (top-right):    FDR bars and standard errors across K
+# Panel C (bottom-left):  Purity violin (pooled across K and replicates)
+# Panel D (bottom-right): CS size box plot (pooled)
+# Panel E (third row):    Full posterior mass under two CS reporting rules
 #
-# Input:  data/s4_metrics.rds  (built by extract_S4_data.R)
+# Inputs:
+#   - data/s4_metrics.rds  (built by extract_S4_data.R)
+#   - data/paired-posterior-mass.csv  (built by simulate_S4E.R)
 # Output: S4.pdf, S4.png
 # =============================================================================
 
@@ -27,6 +30,7 @@ source("R/paths.R")
 s4_dir   <- supp_dir(4)
 data_dir <- file.path(s4_dir, "data")
 data_path <- file.path(data_dir, "s4_metrics.rds")
+paired_path <- file.path(data_dir, "paired-posterior-mass.csv")
 
 if (!file.exists(data_path)) {
   stop("Run extract_S4_data.R first to produce ", data_path)
@@ -194,10 +198,56 @@ panel_D <- ggplot(cs_size, aes(x = Method, y = size, fill = Method)) +
   )
 
 # =============================================================================
-# Compose 2x2 with shared legend below panels C/D, centered
+# Panel E: Cumulative distribution of full posterior mass in reported CSs
+# =============================================================================
+# Both methods receive the same fitted single-effect posterior probabilities.
+# The dashed line marks 95%; the key reports how many sets fall below it.
+# Read the saved table here. Simulation is run separately in simulate_S4E.R.
+
+paired <- read.csv(paired_path)
+reporting_methods <- c("susieR", "SparsePro (2023)")
+reporting_colors <- c("susieR" = "#E67E22", "SparsePro (2023)" = "#16758A")
+mass_columns <- c("mass_susier", "mass_sparsepro")
+curves <- do.call(rbind, lapply(seq_along(reporting_methods), function(i) {
+  mass <- sort(paired[[mass_columns[i]]] * 100)
+  data.frame(Method = reporting_methods[i], mass = c(90, mass, 100),
+             cumulative = c(0, seq_along(mass) / length(mass) * 100, 100))
+}))
+counts <- vapply(paired[mass_columns], function(x) sum(x < 0.95 - 1e-12), integer(1))
+
+panel_E <- ggplot(curves, aes(mass, cumulative, color = Method)) +
+  annotate("rect", xmin = 90, xmax = 95, ymin = -Inf, ymax = Inf,
+           fill = "#F4F5F6") +
+  geom_vline(xintercept = 95, linetype = "dashed", color = "#555555", linewidth = 0.6) +
+  geom_step(linewidth = 1.1, direction = "hv") +
+  scale_color_manual(values = reporting_colors) +
+  scale_x_continuous(breaks = c(90, 92.5, 95, 97.5, 100),
+                     labels = c("90", "92.5", "95", "97.5", "100"), expand = c(0, 0)) +
+  scale_y_continuous(breaks = seq(0, 100, 25), expand = c(0, 0)) +
+  coord_cartesian(xlim = c(90, 100), ylim = c(0, 102)) +
+  labs(x = "Full posterior mass in credible set (%)", y = "Cumulative sets (%)") +
+  base_theme + theme(legend.position = "none", plot.margin = margin(18, 8, 8, 18))
+
+# Build the Panel E key with the number and percentage of CSs below 95%.
+reporting_key <- ggdraw() +
+  draw_text("Credible sets below 95%", x = 0.02, y = 0.83,
+            hjust = 0, size = 14, fontface = "bold")
+for (i in seq_along(reporting_methods)) {
+  y <- c(0.55, 0.29)[i]
+  color <- reporting_colors[i]
+  reporting_key <- reporting_key +
+    draw_line(x = c(0.02, 0.09), y = c(y, y), color = color, linewidth = 1.1) +
+    draw_text(reporting_methods[i], x = 0.12, y = y, hjust = 0, size = 12) +
+    draw_text(sprintf("%d/%d (%.1f%%)", counts[i], nrow(paired),
+                      100 * counts[i] / nrow(paired)),
+              x = 0.98, y = y, hjust = 1, size = 12, color = color, fontface = "bold")
+}
+
+# =============================================================================
+# Compose 2x2 with shared legend below panels C/D, then Panel E
 # =============================================================================
 
-# Build a centered horizontal legend (placed under the bottom row)
+# Build a centered horizontal legend (placed under the second row).
 shared_legend <- get_legend(
   panel_A + theme(
     legend.position      = "bottom",
@@ -209,29 +259,23 @@ shared_legend <- get_legend(
     legend.box.margin    = margin(0, 0, 0, 0)
   )
 )
-
-panel_A_nolegend <- panel_A + theme(legend.position = "none")
-panel_B_nolegend <- panel_B + theme(legend.position = "none")
-
-top_row <- plot_grid(panel_A_nolegend, panel_B_nolegend,
-                     nrow = 1, rel_widths = c(1, 1),
-                     labels = c("A", "B"), label_size = 16,
-                     label_fontface = "bold")
-
-bottom_row <- plot_grid(panel_C, panel_D,
-                        nrow = 1, rel_widths = c(1, 1),
-                        labels = c("C", "D"), label_size = 16,
-                        label_fontface = "bold")
-
-final_figure <- plot_grid(top_row, bottom_row, shared_legend, ncol = 1,
-                          rel_heights = c(1, 1, 0.12))
+panels <- align_plots(panel_A + theme(legend.position = "none"),
+                      panel_B + theme(legend.position = "none"),
+                      panel_C, panel_D, align = "hv", axis = "tblr")
+top_rows <- plot_grid(plotlist = panels, ncol = 2, labels = LETTERS[1:4],
+                       label_size = 16, label_fontface = "bold")
+coverage_row <- plot_grid(panel_E, reporting_key, nrow = 1,
+                          rel_widths = c(0.63, 0.37), labels = c("E", ""),
+                          label_size = 16, label_fontface = "bold")
+final_figure <- plot_grid(top_rows, shared_legend, coverage_row, ncol = 1,
+                          rel_heights = c(2, 0.13, 0.68))
 
 # =============================================================================
 # Save
 # =============================================================================
 
-fig_width  <- 14
-fig_height <- 10
+fig_width  <- 12
+fig_height <- 11.2
 
 out_pdf <- file.path(s4_dir, "S4.pdf")
 ggsave(out_pdf, final_figure, width = fig_width, height = fig_height,
