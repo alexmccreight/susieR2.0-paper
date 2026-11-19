@@ -1,15 +1,9 @@
 #!/usr/bin/env Rscript
 
-# =============================================================================
-# Supplemental S2: Unmappable Effects Figure
-# =============================================================================
-# Row 1: Ground truth (2 panels, 50% each)
-#   A: True effect sizes    B: Z-scores (-log10 p)
-# Row 2: PIP plots (4 panels, 25% each)
-#   C: SuSiE (L=10)   D: SuSiE+BB   E: SuSiE-inf   F: SuSiE-ash
-# Row 3: CS on true effects (4 panels, 25% each)
-#   G: SuSiE (L=10)   H: SuSiE+BB   I: SuSiE-inf   J: SuSiE-ash
-# =============================================================================
+# Manuscript Figure S5 (repository figure S2).
+# A-B: true effects and marginal associations.
+# C-E: PIPs for SuSiE, SuSiE-inf and SuSiE-ash.
+# F-H: credible sets on the true effects for the same methods.
 
 library(ggplot2)
 library(cowplot)
@@ -19,7 +13,7 @@ source("R/paths.R")
 script_dir <- supp_dir(2)
 data_dir   <- file.path(script_dir, "data")
 
-cat("Creating supplementary figure S2: unmappable effects example...\n")
+cat("Creating manuscript Figure S5 (repository S2)...\n")
 
 # =============================================================================
 # Load cached results
@@ -36,7 +30,6 @@ pvals <- data_stats$pvals
 fit_susie    <- readRDS(file.path(data_dir, "fit_susie.rds"))
 fit_inf      <- readRDS(file.path(data_dir, "fit_inf.rds"))
 fit_ash      <- readRDS(file.path(data_dir, "fit_ash.rds"))
-fit_susie_bb <- readRDS(file.path(data_dir, "fit_susie_bb.rds"))
 
 # =============================================================================
 # susie_plot_gg: ggplot2 version of susie_plot
@@ -177,9 +170,9 @@ susie_plot_gg <- function(model, y, add_bar = FALSE, pos = NULL, b = NULL,
 
   p <- p +
     labs(x = "Index", y = ylab, title = title) +
-    theme_cowplot(font_size = 11) +
+    theme_cowplot(font_size = 12) +
     theme(
-      plot.title = element_text(size = 11, face = "bold", hjust = 0.5),
+      plot.title = element_text(size = 12, face = "bold", hjust = 0.5),
       legend.position = if (add_legend) "right" else "none"
     )
 
@@ -212,9 +205,9 @@ make_cs_effects_plot <- function(fit, b, title) {
   p <- ggplot(df, aes(x = pos, y = effect)) +
     geom_point(color = "black", size = 1.5, alpha = 0.7) +
     labs(x = "Index", y = "Absolute Effect Size", title = title) +
-    theme_cowplot(font_size = 11) +
+    theme_cowplot(font_size = 12) +
     theme(legend.position = "none",
-          plot.title = element_text(size = 11, face = "bold"))
+          plot.title = element_text(size = 12, face = "bold"))
 
   if (any(df$in_cs)) {
     cs_df <- df[df$in_cs, ]
@@ -240,7 +233,7 @@ panel_A <- ggplot(df_effects, aes(x = pos, y = effect)) +
   geom_point(data = df_effects[!df_effects$causal, ], color = "black", size = 1.5, alpha = 0.7) +
   geom_point(data = df_effects[df_effects$causal, ], color = "red", size = 3.5, alpha = 0.9) +
   labs(x = "Index", y = "Absolute Effect Size") +
-  theme_cowplot(font_size = 11) +
+  theme_cowplot(font_size = 12) +
   theme(legend.position = "none",
         plot.margin = margin(5, 10, 5, 5))
 
@@ -254,75 +247,49 @@ panel_B <- ggplot(df_zscore, aes(x = pos, y = neglog10p)) +
   geom_point(data = df_zscore[!df_zscore$causal, ], color = "black", size = 1.5, alpha = 0.7) +
   geom_point(data = df_zscore[df_zscore$causal, ], color = "red", size = 3.5, alpha = 0.9) +
   labs(x = "Index", y = expression(-log[10](p))) +
-  theme_cowplot(font_size = 11) +
+  theme_cowplot(font_size = 12) +
   theme(legend.position = "none",
         plot.margin = margin(5, 5, 5, 10))
 
 row1 <- cowplot::plot_grid(panel_A, panel_B, nrow = 1, rel_widths = c(1, 1),
-                           labels = c("A", "B"), label_size = 14, label_fontface = "bold")
+                           align = "hv", axis = "tblr",
+                           labels = c("A", "B"), label_size = 15, label_fontface = "bold")
 
-# =============================================================================
-# ROW 2: PIP Plots (4 panels)
-# =============================================================================
-cat("Creating Row 2: PIP plots...\n")
+# PIPs and credible sets use the same three method columns.
+panel_C <- susie_plot_gg(fit_susie, y = "PIP", b = b, title = "SuSiE")
+panel_D <- susie_plot_gg(fit_inf, y = "PIP", b = b, title = "SuSiE-inf")
+panel_E <- susie_plot_gg(fit_ash, y = "PIP", b = b, title = "SuSiE-ash")
+panel_F <- make_cs_effects_plot(fit_susie, b, NULL)
+panel_G <- make_cs_effects_plot(fit_inf, b, NULL)
+panel_H <- make_cs_effects_plot(fit_ash, b, NULL)
 
-panel_C <- susie_plot_gg(fit_susie, y = "PIP", b = b, title = "SuSiE") +
-  theme(plot.margin = margin(5, 5, 5, 5))
-panel_D <- susie_plot_gg(fit_susie_bb, y = "PIP", b = b, title = "SuSiE+BB") +
-  theme(plot.margin = margin(5, 5, 5, 5))
-panel_E <- susie_plot_gg(fit_inf, y = "PIP", b = b, title = "SuSiE-inf") +
-  theme(plot.margin = margin(5, 5, 5, 5))
-panel_F <- susie_plot_gg(fit_ash, y = "PIP", b = b, title = "SuSiE-ash") +
-  theme(plot.margin = margin(5, 5, 5, 5))
-
-row2 <- cowplot::plot_grid(panel_C, panel_D, panel_E, panel_F, nrow = 1,
-                           rel_widths = c(1, 1, 1, 1),
-                           labels = c("C", "D", "E", "F"),
-                           label_size = 14, label_fontface = "bold")
-
-# =============================================================================
-# ROW 3: CS on True Effects (4 panels)
-# =============================================================================
-cat("Creating Row 3: CS on true effects plots...\n")
-
-panel_G <- make_cs_effects_plot(fit_susie, b, NULL) +
-  theme(plot.margin = margin(5, 5, 5, 5))
-panel_H <- make_cs_effects_plot(fit_susie_bb, b, NULL) +
-  theme(plot.margin = margin(5, 5, 5, 5))
-panel_I <- make_cs_effects_plot(fit_inf, b, NULL) +
-  theme(plot.margin = margin(5, 5, 5, 5))
-panel_J <- make_cs_effects_plot(fit_ash, b, NULL) +
-  theme(plot.margin = margin(5, 5, 5, 5))
-
-row3 <- cowplot::plot_grid(panel_G, panel_H, panel_I, panel_J, nrow = 1,
-                           rel_widths = c(1, 1, 1, 1),
-                           labels = c("G", "H", "I", "J"),
-                           label_size = 14, label_fontface = "bold")
-
-# =============================================================================
-# Combine all rows
-# =============================================================================
-cat("Combining all rows into final figure...\n")
+lower_panels <- cowplot::align_plots(
+  panel_C, panel_D, panel_E, panel_F, panel_G, panel_H,
+  align = "v", axis = "lr"
+)
+row2 <- cowplot::plot_grid(
+  plotlist = lower_panels[1:3], nrow = 1,
+  labels = c("C", "D", "E"), label_size = 15, label_fontface = "bold"
+)
+row3 <- cowplot::plot_grid(
+  plotlist = lower_panels[4:6], nrow = 1,
+  labels = c("F", "G", "H"), label_size = 15, label_fontface = "bold"
+)
 
 final_figure <- cowplot::plot_grid(
-  row1, row2, row3,
-  ncol = 1,
-  rel_heights = c(1, 1, 1)
+  row1, row2, row3, ncol = 1, rel_heights = c(0.9, 1, 1)
 )
 
 output_pdf <- file.path(script_dir, "S2.pdf")
 ggsave(output_pdf, final_figure,
-       width = 13, height = 9, units = "in", bg = "white")
+       width = 11, height = 8.5, units = "in", bg = "white")
 
 output_png <- file.path(script_dir, "S2.png")
 ggsave(output_png, final_figure,
-       width = 13, height = 9, units = "in", dpi = 300, bg = "white")
+       width = 11, height = 8.5, units = "in", dpi = 300, bg = "white")
 
 cat(sprintf("\nFigure saved to:\n  - %s\n  - %s\n", output_pdf, output_png))
-
-# Print summary
-cat("\n=== Summary ===\n")
-cat(sprintf("SuSiE (L=10):  %d credible sets\n", length(fit_susie$sets$cs)))
-cat(sprintf("SuSiE+BB:  %d credible sets\n", length(fit_susie_bb$sets$cs)))
-cat(sprintf("SuSiE-inf:     %d credible sets\n", length(fit_inf$sets$cs)))
-cat(sprintf("SuSiE-ash:     %d credible sets\n", length(fit_ash$sets$cs)))
+cat("\nCredible sets:\n")
+cat(sprintf("SuSiE:     %d\n", length(fit_susie$sets$cs)))
+cat(sprintf("SuSiE-inf: %d\n", length(fit_inf$sets$cs)))
+cat(sprintf("SuSiE-ash: %d\n", length(fit_ash$sets$cs)))
