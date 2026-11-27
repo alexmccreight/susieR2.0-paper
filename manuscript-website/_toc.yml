@@ -1,0 +1,13 @@
+# Table of contents
+# Learn more at https://jupyterbook.org/customize/toc.html
+
+format: jb-book
+root: README
+chapters:
+  - file: Simulation_Studies/index
+  - file: Data_Applications/index
+    sections:
+      - file: Main_Figures/figure_2/data/data_generation/alphagenome_scoring/README
+        title: AlphaGenome scoring pipeline
+  - file: Main_Figures/index
+  - file: Supplementary_Figures/index

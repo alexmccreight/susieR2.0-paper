@@ -1,0 +1,26 @@
+# Book settings
+title: susieR 2.0 manuscript resources
+author: Alex McCreight
+copyright: "2026"
+
+execute:
+  execute_notebooks: false
+
+latex:
+  latex_documents:
+    targetname: book.tex
+
+repository:
+  url: https://github.com/alexmccreight/susieR2.0-paper
+  path_to_book: ""
+  branch: master
+
+html:
+  use_issues_button: true
+  use_repository_button: true
+  use_edit_page_button: true
+
+sphinx:
+  config:
+    html_theme_options:
+      show_navbar_depth: 2

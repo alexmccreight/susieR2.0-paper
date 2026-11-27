@@ -1,0 +1,68 @@
+================================================================================
+AlphaGenome CS Score Comparison by Method-Agreement Group
+CS_Score = sum(PIP * |quantile_score|) / sum(PIP); Null = 0.5
+Jaccard threshold for matching: 0.75
+================================================================================
+
+--- Overall per Group ---
+Group                  N_CS     Mean   Median      Std   %>0.5
+-----------------------------------------------------------------
+Consensus             17226   0.4739   0.4517   0.2077   39.7%
+Standard-specific      2156   0.4597   0.4385   0.1835   36.1%
+Inf-specific            669   0.4950   0.4612   0.2180   43.6%
+
+
+--- Per Group x Modality ---
+Group                Modality          N_CS     Mean   Median   %>0.5
+---------------------------------------------------------------------------
+Consensus            RNA_SEQ           4698   0.5818   0.5514   61.4%
+Consensus            DNASE             3872   0.5298   0.5191   56.6%
+Consensus            CHIP_HISTONE      6444   0.3566   0.3483   14.1%
+Consensus            CHIP_TF           2212   0.4888   0.4654   38.9%
+Standard-specific    RNA_SEQ            615   0.5424   0.5133   54.3%
+Standard-specific    DNASE              457   0.5163   0.5154   55.6%
+Standard-specific    CHIP_HISTONE       837   0.3603   0.3569   11.9%
+Standard-specific    CHIP_TF            247   0.4854   0.4600   36.8%
+Inf-specific         RNA_SEQ            192   0.6208   0.5959   67.2%
+Inf-specific         DNASE              139   0.5358   0.5292   54.7%
+Inf-specific         CHIP_HISTONE       252   0.3748   0.3568   18.7%
+Inf-specific         CHIP_TF             86   0.5005   0.4718   46.5%
+
+
+--- Wilcoxon Rank-Sum: Consensus vs Other Groups ---
+Group                Modality         N_group       W-stat    P-value
+----------------------------------------------------------------------
+Standard-specific    RNA_SEQ              615    1609698.0   3.94e-06 ***
+Standard-specific    DNASE                457     908349.5   3.50e-01 
+Standard-specific    CHIP_HISTONE         837    2620973.0   1.85e-01 
+Standard-specific    CHIP_TF              247     273531.0   9.74e-01 
+Inf-specific         RNA_SEQ              192     407697.0   2.39e-02 *
+Inf-specific         DNASE                139     262981.0   6.48e-01 
+Inf-specific         CHIP_HISTONE         252     763324.0   1.06e-01 
+Inf-specific         CHIP_TF               86      91276.0   5.25e-01 
+
+
+--- Per Tissue x Group ---
+
+  AC:
+  Group                  N_CS     Mean   Median   %>0.5
+  Consensus              5100   0.4877   0.4591   41.1%
+  Standard-specific       755   0.4663   0.4372   35.4%
+  Inf-specific            223   0.5160   0.4831   47.1%
+
+  DLPFC:
+  Group                  N_CS     Mean   Median   %>0.5
+  Consensus              8806   0.4723   0.4499   40.1%
+  Standard-specific       981   0.4600   0.4474   38.4%
+  Inf-specific            340   0.4937   0.4642   43.8%
+
+  PCC:
+  Group                  N_CS     Mean   Median   %>0.5
+  Consensus              3320   0.4571   0.4468   36.7%
+  Standard-specific       420   0.4470   0.4272   32.1%
+  Inf-specific            106   0.4553   0.4353   35.8%
+
+
+--- Verification ---
+  standard: 4059 assigned, 4059 expected — OK
+  inf: 3474 assigned, 3474 expected — OK
